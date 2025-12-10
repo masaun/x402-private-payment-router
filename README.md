@@ -1,3 +1,20 @@
+# Private Micropayment contract
+
+## Overview
+- This repo is the private micropayment contract in Noir on Aztec Network.
+- This repos is forked from the [`aztec-workshop`](https://github.com/0xShaito/aztec-workshop) repo.
+
+<br>
+
+## Technical Stack
+
+- Smart Contract: `Noir`
+- Blockchain: `Aztec`
+
+<br>
+
+<hr>
+
 # Aztec Noir Boilerplate
 
 <div align="center"><strong>Start your next Aztec project with Noir in seconds</strong></div>
