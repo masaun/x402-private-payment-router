@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "src/nr/counter_contract",
+    "src/nr/private_payment_router_contract",
+    #"src/nr/counter_contract",
 ]
 
 [benchmark]
