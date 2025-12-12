@@ -1,5 +1,5 @@
 [package]
-name = "X402_private_payment_router"
+name = "X402_private_payment_router_contract"
 #name = "counter_contract"
 type = "contract"
 compiler_version = ">=1.0.0"
