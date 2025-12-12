@@ -34,26 +34,29 @@ pub contract X402PrivatePaymentRouter {
     }
 
     // @dev - Payment Commitment Note, which the backend will watch (encrypted)
-    #[derive(Eq, Packable)]
-    #[note]
+    // #[derive(Eq, Packable)]
+    // #[note]
+    // @dev - Event
     pub struct PaymentCommitted {
         payment_hash: Field,
         amount: Field,
     }
 
-    impl PaymentCommitted {
-        pub fn new(payment_hash: Field, amount: Field) -> Self {
-            Self { // @dev - "Self" is equivalent to "PaymentCommitted" sturct
-                payment_hash,
-                amount,
-            }
-        }
-    }
+    // impl PaymentCommitted {
+    //     pub fn new(payment_hash: Field, amount: Field) -> Self {
+    //         Self { // @dev - "Self" is equivalent to "PaymentCommitted" sturct
+    //             payment_hash,
+    //             amount,
+    //         }
+    //     }
+    // }
 
     #[external("private")]
     pub fn deposit(payer: AztecAddress, amount: Field) {
-        let balance = storage.wallets.at(payer).get_note();
-        self.wallets().insert(payer, balance + amount);
+        let current_balance = storage.wallets.at(payer).get_note();
+        let new_balance = current_balance + amount;
+
+        storage.wallets.at(payer).replace(|current_balance| new_balance);
     }
 
     #[external("private")]
@@ -61,6 +64,7 @@ pub contract X402PrivatePaymentRouter {
         payer: AztecAddress,
         payment_hash: Field,
         amount: Field,
+        event_recipient: AztecAddress,
     ) {
         // check sender owns wallet
         let current_wallet_note = storage.wallets.at(payer).get_note();
@@ -75,7 +79,7 @@ pub contract X402PrivatePaymentRouter {
         emit_event_in_private(
             PaymentCommitted { payment_hash, amount },
             &mut context,
-            recipient,
+            event_recipient,
             MessageDelivery.UNCONSTRAINED_ONCHAIN,
         );
         //PaymentCommitted { payment_hash, amount }.emit();
