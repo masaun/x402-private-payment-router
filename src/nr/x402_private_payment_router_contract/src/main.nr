@@ -30,30 +30,33 @@ pub contract X402PrivatePaymentRouter {
     #[storage]
     struct Storage<Context> {
         admin: PublicMutable<AztecAddress, Context>,
-        wallets: Map<AztecAddress, PublicMutable<Field, Context>, Context>  // Private wallets: payer => balance
+        balance: Map<AztecAddress, PrivateMutable<Field, Context>, Context>  // Private wallets: payer => balance
     }
 
     // @dev - Payment Commitment Note, which the backend will watch (encrypted)
-    #[derive(Eq, Packable)]
-    #[note]
+    // #[derive(Eq, Packable)]
+    // #[note]
+    // @dev - Event
     pub struct PaymentCommitted {
         payment_hash: Field,
         amount: Field,
     }
 
-    impl PaymentCommitted {
-        pub fn new(payment_hash: Field, amount: Field) -> Self {
-            Self { // @dev - "Self" is equivalent to "PaymentCommitted" sturct
-                payment_hash,
-                amount,
-            }
-        }
-    }
+    // impl PaymentCommitted {
+    //     pub fn new(payment_hash: Field, amount: Field) -> Self {
+    //         Self { // @dev - "Self" is equivalent to "PaymentCommitted" sturct
+    //             payment_hash,
+    //             amount,
+    //         }
+    //     }
+    // }
 
     #[external("private")]
     pub fn deposit(payer: AztecAddress, amount: Field) {
-        let balance = storage.wallets.at(payer).get_note();
-        self.wallets().insert(payer, balance + amount);
+        let current_balance = storage.balance.at(payer).get_note();
+        let new_balance = current_balance + amount;
+
+        storage.balance.at(payer).replace(|current_balance| new_balance);
     }
 
     #[external("private")]
@@ -61,21 +64,22 @@ pub contract X402PrivatePaymentRouter {
         payer: AztecAddress,
         payment_hash: Field,
         amount: Field,
+        event_recipient: AztecAddress,
     ) {
         // check sender owns wallet
-        let current_wallet_note = storage.wallets.at(payer).get_note();
-        assert(current_wallet_note >= amount, "insufficient funds");
+        let current_balance = storage.balance.at(payer).get_note();
+        assert(current_balance >= amount, "insufficient funds");
 
         let new_wallet_note = PaymentCommitted::new(payment_hash, amount);
-        let new_balance = current_wallet_note - amount;
+        let new_balance = current_balance - amount;
         
-        storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(msg_sender, MessageDelivery.CONSTRAINED_ONCHAIN);
+        storage.balance.at(payer).replace(|current_balance| new_balance).emit(msg_sender, MessageDelivery.CONSTRAINED_ONCHAIN);
 
         // @dev - Emit event in private
         emit_event_in_private(
             PaymentCommitted { payment_hash, amount },
             &mut context,
-            recipient,
+            event_recipient,
             MessageDelivery.UNCONSTRAINED_ONCHAIN,
         );
         //PaymentCommitted { payment_hash, amount }.emit();
