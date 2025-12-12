@@ -1,9 +1,18 @@
-node_modules
+# Aztec and Noir/Nargo
 target/
 src/artifacts/
+codegenCache.json
+
+# Secret files
+.env
+.env.local
+
+# Node modules
+node_modules
+package-lock.json
+
+# Others
 log/
 .vscode
 .DS_Store
-codegenCache.json
-.env
 .cursor
