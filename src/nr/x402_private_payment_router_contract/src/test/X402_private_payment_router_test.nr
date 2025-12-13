@@ -23,6 +23,6 @@ unconstrained fn does_it_fail_to_call_the_initializer() {
         X402_private_payment_router_deployer.with_public_initializer(owner, initializer_call_interface);
 
     env.call_private(owner, X402PrivatePaymentRouter::at(contract_address).increment());
-    let X402_private_payment_router = env.view_public(X402PrivatePaymentRouter::at(contract_address).get_counter());
+    let X402_private_payment_router = env.view_private(X402PrivatePaymentRouter::at(contract_address).get_counter());
     assert(X402_private_payment_router == 1);
 }
