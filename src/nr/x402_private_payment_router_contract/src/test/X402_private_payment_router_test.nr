@@ -3,9 +3,11 @@ use crate::{X402PrivatePaymentRouter, test::utils};
 // [TODO]: Rewrite the test for the X402PrivatePaymentRouter contract.
 #[test]
 unconstrained fn increment_success() {
-    let (env, contract_address, owner, _) = utils::setup_contract(false);
+    let (env, contract_address, owner, payer) = utils::setup_contract(false);
 
-    env.call_private(owner, X402PrivatePaymentRouter::at(contract_address).increment());
+    // @dev - A payer would deposit some amount.
+    let deposited_amount: u128 = 1000;
+    env.call_private(payer, X402PrivatePaymentRouter::at(contract_address).deposit(deposited_amount));
 
     let X402_private_payment_router = env.view_public(X402PrivatePaymentRouter::at(contract_address).get_counter());
     assert(X402_private_payment_router == 1);

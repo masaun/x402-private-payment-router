@@ -8,19 +8,19 @@ pub unconstrained fn setup_contract(
 ) -> (&mut TestEnvironment, AztecAddress, AztecAddress, AztecAddress) {
     // Setup env, generate keys
     let mut env = TestEnvironment::new();
-    let (owner, user) = if with_account_contracts {
+    let (owner, payer) = if with_account_contracts {
         let owner = env.create_contract_account();
-        let user = env.create_contract_account();
-        (owner, user)
+        let payer = env.create_contract_account();
+        (owner, payer)
     } else {
         let owner = env.create_light_account();
-        let user = env.create_light_account();
-        (owner, user)
+        let payer = env.create_light_account();
+        (owner, payer)
     };
 
     let contract_address = deploy_contract(&mut env, owner);
 
-    (&mut env, contract_address, owner, user)
+    (&mut env, contract_address, owner, payer)
 }
 
 pub unconstrained fn deploy_contract(
