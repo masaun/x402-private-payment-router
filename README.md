@@ -8,7 +8,7 @@
 ## Technical Stack
 
 - Smart Contract: `Noir`
-  - nargo/noirc: `v1.0.0-beta.11`
+  - nargo/noirc: `v1.0.0-beta.16`
 
 - Blockchain: `Aztec` Network (Ethereum L2 Rollup)
   - aztec package: `v3.0.0-devnet.2`
