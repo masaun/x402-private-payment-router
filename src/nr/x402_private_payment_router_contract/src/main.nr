@@ -1,23 +1,32 @@
 use aztec::macros::aztec;
+pub mod types;
 pub mod test;
 
 #[aztec]
 pub contract X402PrivatePaymentRouter {
     // aztec library imports
     use aztec::{
+        context::{PrivateContext, PublicContext},
+        keys::getters::{get_nsk_app, get_public_keys},
         macros::{
-            functions::{external, internal, view, initializer }, 
+            functions::{external, initializer, internal, view}, 
             storage::storage,
             notes::{
                 note,
                 custom_note
             },
         },
+        messages::logs::note,
+        note::note_interface::{NoteHash, NoteType},
         protocol_types::{
             address::AztecAddress,
-            traits::{Packable, ToField}
+            constants::{
+                GENERATOR_INDEX__NOTE_HASH, GENERATOR_INDEX__NOTE_NULLIFIER,
+                GENERATOR_INDEX__PARTIAL_NOTE_VALIDITY_COMMITMENT,
+            },
+            hash::poseidon2_hash_with_separator,
+            traits::{Deserialize, Hash, Packable, Serialize, ToField},
         },
-        event::event_emission::emit_event_in_private,
         state_vars::{
             PublicImmutable, PublicMutable, DelayedPublicMutable,
             PrivateImmutable, PrivateMutable, PrivateSet, 
@@ -27,10 +36,13 @@ pub contract X402PrivatePaymentRouter {
         messages::message_delivery::MessageDelivery
     };
 
+    // @dev - Import note (WalletNote) and custom note struct
+    use crate::types::wallet_note::{WalletNote};
+
     #[storage]
     struct Storage<Context> {
         admin: PublicMutable<AztecAddress, Context>,
-        balance: Map<AztecAddress, PrivateMutable<Field, Context>, Context>  // Private wallets: payer => balance
+        wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
     }
 
     // @dev - Payment Commitment Note, which the backend will watch (encrypted)
@@ -54,10 +66,10 @@ pub contract X402PrivatePaymentRouter {
     #[external("private")]
     pub fn deposit(amount: Field) {
         let payer = context.msg_sender().unwrap();
-        let current_balance = storage.balance.at(payer).get_note();
+        let current_balance = storage.wallets.get_balance().at(payer);
         let new_balance = current_balance + amount;
 
-        storage.balance.at(payer).replace(|current_balance| new_balance);
+        storage.wallets.get_balance().at(payer).replace(|current_balance| new_balance);
     }
 
     #[external("private")]
@@ -69,13 +81,16 @@ pub contract X402PrivatePaymentRouter {
         let payer: AztecAddress = context.msg_sender().unwrap();
 
         // check sender owns wallet
-        let current_balance = storage.balance.at(payer).get_note();
-        assert(current_balance >= amount, "insufficient funds");
+        let current_balance = storage.wallets.get_balance().at(payer);
+        //assert_gt(current_balance, amount, "insufficient funds");
 
-        let new_wallet_note = PaymentCommitted::new(payment_hash, amount);
         let new_balance = current_balance - amount;
-        
-        storage.balance.at(payer).replace(|current_balance| new_balance).emit(msg_sender, MessageDelivery.CONSTRAINED_ONCHAIN);
+
+        //assert(new_balance >= 0, "balance underflow");
+        assert_eq(payer, storage.wallets.get_owner().at(payer), "unauthorized wallet access");
+        let new_wallet_note = WalletNote::new(payer, new_balance);
+
+        storage.wallets.get_balance().at(payer).replace(|current_balance| new_balance).emit(msg_sender, MessageDelivery.CONSTRAINED_ONCHAIN);
 
         // @dev - Emit event in private
         emit_event_in_private(
