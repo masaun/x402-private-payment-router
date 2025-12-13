@@ -52,7 +52,8 @@ pub contract X402PrivatePaymentRouter {
     // }
 
     #[external("private")]
-    pub fn deposit(payer: AztecAddress, amount: Field) {
+    pub fn deposit(amount: Field) {
+        let payer = context.msg_sender().unwrap();
         let current_balance = storage.balance.at(payer).get_note();
         let new_balance = current_balance + amount;
 
@@ -61,11 +62,12 @@ pub contract X402PrivatePaymentRouter {
 
     #[external("private")]
     pub fn authorize_payment(
-        payer: AztecAddress,
         payment_hash: Field,
         amount: Field,
         event_recipient: AztecAddress,
     ) {
+        let payer: AztecAddress = context.msg_sender().unwrap();
+
         // check sender owns wallet
         let current_balance = storage.balance.at(payer).get_note();
         assert(current_balance >= amount, "insufficient funds");
