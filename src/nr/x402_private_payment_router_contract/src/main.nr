@@ -69,15 +69,15 @@ pub contract X402PrivatePaymentRouter {
     /// @param owner The address of the owner
     #[external("public")]
     #[initializer]
-    fn constructor(owner: AztecAddress) {
-        storage.owner.initialize(owner);
+    fn constructor(_admin: AztecAddress) {
+        storage.admin.initialize(_admin);
     }
 
     /// @dev Retrieves the owner of the contract
     /// @return The owner of the contract
     #[external("public")]
-    fn get_owner() -> AztecAddress {
-        storage.owner.read()
+    fn get_admin() -> AztecAddress {
+        storage.admin.read()
     }
 
     /// @dev - Deposit and increments the payment ID
