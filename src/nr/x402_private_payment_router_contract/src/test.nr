@@ -1,2 +1,2 @@
-mod X402_private_payment_router_test;
+mod x402_private_payment_router_test;
 pub mod utils;
