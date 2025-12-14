@@ -33,6 +33,7 @@ pub contract X402PrivatePaymentRouter {
             Map
         },
         oracle::random::random,
+        event::event_emission::emit_event_in_private,
         messages::message_delivery::MessageDelivery
     };
 
