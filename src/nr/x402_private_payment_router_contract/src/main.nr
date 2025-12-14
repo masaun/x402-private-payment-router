@@ -41,7 +41,7 @@ pub contract X402PrivatePaymentRouter {
 
     #[storage]
     struct Storage<Context> {
-        admin: PublicMutable<AztecAddress, Context>,
+        admin: PublicImmutable<AztecAddress, Context>,
         payment_id: PublicMutable<u128, Context>,  
         wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
     }
@@ -82,8 +82,9 @@ pub contract X402PrivatePaymentRouter {
 
     /// @dev - Deposit and increments the payment ID
     #[external("private")]
-    pub fn deposit(amount: Field) {
+    pub fn deposit(context: PrivateContext, amount: Field) {
         let payer = context.msg_sender().unwrap();
+
         let current_balance = storage.wallets.get_balance().at(payer);
         let new_balance = current_balance + amount;
 
@@ -92,6 +93,7 @@ pub contract X402PrivatePaymentRouter {
 
     #[external("private")]
     pub fn authorize_payment(
+        mut context: PrivateContext, // @dev - To use "&mut context" in this function. Otherwise, it causes an error: "Cannot mutate immutable variable `context`"
         payment_hash: Field,
         amount: Field,
         event_recipient: AztecAddress,
@@ -120,7 +122,7 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Emit event in private
         emit_event_in_private(
             PaymentCommitted { payment_hash, amount },
-            &mut context,
+            &mut context, // @dev - [NOTE]: Cannot mutate immutable variable `context`
             event_recipient,
             MessageDelivery.UNCONSTRAINED_ONCHAIN,
         );
