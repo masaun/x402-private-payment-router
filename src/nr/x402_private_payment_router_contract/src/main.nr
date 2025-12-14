@@ -41,39 +41,17 @@ pub contract X402PrivatePaymentRouter {
         messages::message_delivery::MessageDelivery
     };
 
-    // @dev - Import note (WalletNote) and custom note struct
+    // @dev - Import the note struct or/and the custom note struct
     use crate::types::wallet_note::{WalletNote};
 
-    global PAYMENT_COMMITTED_LEN: u32 = 2;
+    // @dev - Import the event struct
+    use crate::types::payment_committed_event::{PaymentCommitted};
 
     #[storage]
     struct Storage<Context> {
         admin: PublicImmutable<AztecAddress, Context>,
         payment_id: PublicMutable<u128, Context>,  
         wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
-    }
-
-    // @dev - Event: PaymentCommitted event, which the backend will watch (encrypted)
-    pub struct PaymentCommitted {
-        payment_hash: Field,
-        amount: Field,
-    }
-
-    // @dev - Implement Serialize for the PaymentCommitted event
-    impl Serialize for PaymentCommitted {
-        type N = PAYMENT_COMMITTED_LEN;
-
-        fn serialize(self) -> [Field; PAYMENT_COMMITTED_LEN] {
-            [self.payment_hash, self.amount]
-        }
-    }
-
-    // Implement EventInterface for the PaymentCommitted event
-    impl EventInterface for PaymentCommitted {
-        fn get_event_type_id() -> EventSelector {
-            // The string must match your event's name and field types
-            EventSelector::from_signature("PaymentCommitted(Field,Field)")
-        }
     }
 
     /// @dev Initialize the contract
@@ -130,7 +108,7 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
 
-        // @dev - Emit event in private
+        // @dev - Emit the PaymentCommitted event in private
         emit_event_in_private(
             PaymentCommitted { payment_hash, amount },
             &mut context, // @dev - [NOTE]: Cannot mutate immutable variable `context`
