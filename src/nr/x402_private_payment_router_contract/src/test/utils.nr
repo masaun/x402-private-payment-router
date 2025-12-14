@@ -1,4 +1,4 @@
-use crate::Counter;
+use crate::X402PrivatePaymentRouter;
 use aztec::{
     protocol_types::address::AztecAddress, test::helpers::test_environment::TestEnvironment,
 };
@@ -8,28 +8,28 @@ pub unconstrained fn setup_contract(
 ) -> (&mut TestEnvironment, AztecAddress, AztecAddress, AztecAddress) {
     // Setup env, generate keys
     let mut env = TestEnvironment::new();
-    let (owner, user) = if with_account_contracts {
+    let (owner, payer) = if with_account_contracts {
         let owner = env.create_contract_account();
-        let user = env.create_contract_account();
-        (owner, user)
+        let payer = env.create_contract_account();
+        (owner, payer)
     } else {
         let owner = env.create_light_account();
-        let user = env.create_light_account();
-        (owner, user)
+        let payer = env.create_light_account();
+        (owner, payer)
     };
 
     let contract_address = deploy_contract(&mut env, owner);
 
-    (&mut env, contract_address, owner, user)
+    (&mut env, contract_address, owner, payer)
 }
 
 pub unconstrained fn deploy_contract(
     env: &mut TestEnvironment,
     owner: AztecAddress,
 ) -> AztecAddress {
-    let initializer_call_interface = Counter::interface().constructor(owner);
+    let initializer_call_interface = X402PrivatePaymentRouter::interface().constructor(owner);
     let contract_address =
-        env.deploy("Counter").with_public_initializer(owner, initializer_call_interface);
+        env.deploy("X402PrivatePaymentRouter").with_public_initializer(owner, initializer_call_interface);
 
     contract_address
 }

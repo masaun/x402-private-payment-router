@@ -42,6 +42,7 @@ pub contract X402PrivatePaymentRouter {
     #[storage]
     struct Storage<Context> {
         admin: PublicMutable<AztecAddress, Context>,
+        payment_id: PublicMutable<u128, Context>,  
         wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
     }
 
@@ -63,6 +64,23 @@ pub contract X402PrivatePaymentRouter {
     //     }
     // }
 
+
+    /// @dev Initialize the contract
+    /// @param owner The address of the owner
+    #[external("public")]
+    #[initializer]
+    fn constructor(_admin: AztecAddress) {
+        storage.admin.initialize(_admin);
+    }
+
+    /// @dev Retrieves the owner of the contract
+    /// @return The owner of the contract
+    #[external("public")]
+    fn get_admin() -> AztecAddress {
+        storage.admin.read()
+    }
+
+    /// @dev - Deposit and increments the payment ID
     #[external("private")]
     pub fn deposit(amount: Field) {
         let payer = context.msg_sender().unwrap();
@@ -78,9 +96,13 @@ pub contract X402PrivatePaymentRouter {
         amount: Field,
         event_recipient: AztecAddress,
     ) {
-        let payer: AztecAddress = context.msg_sender().unwrap();
+        let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
-        // check sender owns wallet
+        // @dev - Create the payer instance, which the msg_sender is stored.
+        let payer: AztecAddress = context.msg_sender().unwrap();
+        //let msg_sender: AztecAddress = context.msg_sender().unwrap();
+
+        // @dev - Check if the payer has sufficient balance 
         let current_balance = storage.wallets.get_balance().at(payer);
         //assert_gt(current_balance, amount, "insufficient funds");
 
@@ -90,7 +112,10 @@ pub contract X402PrivatePaymentRouter {
         assert_eq(payer, storage.wallets.get_owner().at(payer), "unauthorized wallet access");
         let new_wallet_note = WalletNote::new(payer, new_balance);
 
-        storage.wallets.get_balance().at(payer).replace(|current_balance| new_balance).emit(msg_sender, MessageDelivery.CONSTRAINED_ONCHAIN);
+        storage.wallets.get_balance().at(payer).replace(|current_balance| new_balance).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
+
+        // @dev - Public function: The payment_id is incremented internally.
+        x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
 
         // @dev - Emit event in private
         emit_event_in_private(
@@ -100,6 +125,23 @@ pub contract X402PrivatePaymentRouter {
             MessageDelivery.UNCONSTRAINED_ONCHAIN,
         );
         //PaymentCommitted { payment_hash, amount }.emit();
+    }
+
+    /// @dev Retrieves the current payment ID
+    /// @dev - This return value can be retrieved on FE - since the "payment_id" is a PublicMutable variable.
+    /// @return The current payment ID
+    #[external("public")]
+    #[view]
+    fn get_payment_id() -> u128 {
+        storage.payment_id.read()
+    }
+
+    /// @dev - Increments the payment ID
+    #[external("public")] // @dev - [NOTE]: .write()/.read() methods can be used in "public" functions.
+    #[internal]
+    fn increment_payment_id() {
+        let current_payment_id: u128 = storage.payment_id.read();
+        storage.payment_id.write(current_payment_id + 1)
     }
 }
 
