@@ -33,11 +33,18 @@ pub contract X402PrivatePaymentRouter {
             Map
         },
         oracle::random::random,
+        event::{
+            event_emission::emit_event_in_private,
+            event_selector::EventSelector,
+            event_interface::EventInterface,
+        },
         messages::message_delivery::MessageDelivery
     };
 
     // @dev - Import note (WalletNote) and custom note struct
     use crate::types::wallet_note::{WalletNote};
+
+    global PAYMENT_COMMITTED_LEN: u32 = 2;
 
     #[storage]
     struct Storage<Context> {
@@ -46,24 +53,28 @@ pub contract X402PrivatePaymentRouter {
         wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
     }
 
-    // @dev - Payment Commitment Note, which the backend will watch (encrypted)
-    // #[derive(Eq, Packable)]
-    // #[note]
-    // @dev - Event
+    // @dev - Event: PaymentCommitted event, which the backend will watch (encrypted)
     pub struct PaymentCommitted {
         payment_hash: Field,
         amount: Field,
     }
 
-    // impl PaymentCommitted {
-    //     pub fn new(payment_hash: Field, amount: Field) -> Self {
-    //         Self { // @dev - "Self" is equivalent to "PaymentCommitted" sturct
-    //             payment_hash,
-    //             amount,
-    //         }
-    //     }
-    // }
+    // @dev - Implement Serialize for the PaymentCommitted event
+    impl Serialize for PaymentCommitted {
+        type N = PAYMENT_COMMITTED_LEN;
 
+        fn serialize(self) -> [Field; PAYMENT_COMMITTED_LEN] {
+            [self.payment_hash, self.amount]
+        }
+    }
+
+    // Implement EventInterface for the PaymentCommitted event
+    impl EventInterface for PaymentCommitted {
+        fn get_event_type_id() -> EventSelector {
+            // The string must match your event's name and field types
+            EventSelector::from_signature("PaymentCommitted(Field,Field)")
+        }
+    }
 
     /// @dev Initialize the contract
     /// @param owner The address of the owner
