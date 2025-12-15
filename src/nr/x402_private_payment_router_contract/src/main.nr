@@ -45,7 +45,33 @@ pub contract X402PrivatePaymentRouter {
     use crate::types::wallet_note::{WalletNote};
 
     // @dev - Import the event struct
-    use crate::types::payment_committed_event::{PaymentCommitted};
+    //use crate::types::payment_committed_event::{PaymentCommitted};
+
+    // @dev - Define the PaymentCommitted event to be called in the private function.
+    // @dev - [NOTE]: Since the PaymentCommitted event is called in the private function, the PaymentCommitted event must be defined inside this contract. (It can not be imported from the types module)
+    struct PaymentCommitted {
+        payment_hash: Field,
+        amount: Field,
+    }
+
+    // @dev - Implement Serialize for the PaymentCommitted event
+    global PAYMENT_COMMITTED_LEN: u32 = 2;
+    impl Serialize for PaymentCommitted {
+        type N = PAYMENT_COMMITTED_LEN;
+
+        fn serialize(self) -> [Field; PAYMENT_COMMITTED_LEN] { // @dev - [Field; 2] is expected to be returned.
+            [self.payment_hash, self.amount]
+        }
+    }
+
+    // Implement EventInterface for the PaymentCommitted event
+    impl EventInterface for PaymentCommitted {
+        fn get_event_type_id() -> EventSelector {
+            // The string must match your event's name and field types
+            EventSelector::from_signature("PaymentCommitted(Field,Field)")
+        }
+    }
+
 
     #[storage]
     struct Storage<Context> {
