@@ -1,4 +1,5 @@
-use aztec::macros::aztec;
+use dep::aztec::macros::aztec;
+
 pub mod types;
 pub mod test;
 
@@ -16,8 +17,8 @@ pub contract X402PrivatePaymentRouter {
                 custom_note
             },
         },
-        messages::logs::note,
-        note::note_interface::{NoteHash, NoteType},
+        //messages::logs::note,
+        //note::note_interface::{NoteHash, NoteType},
         protocol_types::{
             address::AztecAddress,
             constants::{
@@ -44,9 +45,13 @@ pub contract X402PrivatePaymentRouter {
     // @dev - Import the note struct or/and the custom note struct
     use crate::types::wallet_note::{WalletNote};
 
-    // @dev - Import the event struct
+    // @dev - Import the PaymentCommitted event struct from the types module.
     //use crate::types::payment_committed_event::{PaymentCommitted};
 
+
+    /******************************
+    *   @notice - Event structs   *
+    *******************************/
     // @dev - Define the PaymentCommitted event to be called in the private function.
     // @dev - [NOTE]: Since the PaymentCommitted event is called in the private function, the PaymentCommitted event must be defined inside this contract. (It can not be imported from the types module)
     struct PaymentCommitted {
@@ -72,7 +77,6 @@ pub contract X402PrivatePaymentRouter {
         }
     }
 
-
     #[storage]
     struct Storage<Context> {
         admin: PublicImmutable<AztecAddress, Context>,
@@ -97,18 +101,22 @@ pub contract X402PrivatePaymentRouter {
 
     /// @dev - Deposit and increments the payment ID
     #[external("private")]
-    pub fn deposit(context: PrivateContext, amount: Field) {
+    fn deposit(context: PrivateContext, amount: Field) {
         let payer = context.msg_sender().unwrap();
 
-        let current_balance = storage.wallets.get_balance().at(payer);
+        // @dev - Fetch the wallet note of the payer from the storage mapping.
+        let current_wallet_note = storage.wallets.at(payer).get_note();
+        
+        let current_balance = current_wallet_note.get_balance();
         let new_balance = current_balance + amount;
 
-        storage.wallets.get_balance().at(payer).replace(|current_balance| new_balance);
+        let new_wallet_note = WalletNote::new(payer, new_balance);
+
+        storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
     }
 
     #[external("private")]
-    pub fn authorize_payment(
-        mut context: PrivateContext, // @dev - To use "&mut context" in this function. Otherwise, it causes an error: "Cannot mutate immutable variable `context`"
+    fn authorize_payment(
         payment_hash: Field,
         amount: Field,
         event_recipient: AztecAddress,
@@ -119,17 +127,20 @@ pub contract X402PrivatePaymentRouter {
         let payer: AztecAddress = context.msg_sender().unwrap();
         //let msg_sender: AztecAddress = context.msg_sender().unwrap();
 
+        // @dev - Fetch the wallet note of the payer from the storage mapping.
+        let current_wallet_note = storage.wallets.at(payer).get_note();
+
         // @dev - Check if the payer has sufficient balance 
-        let current_balance = storage.wallets.get_balance().at(payer);
+        let current_balance = wallet_note.get_balance();
         //assert_gt(current_balance, amount, "insufficient funds");
 
         let new_balance = current_balance - amount;
 
         //assert(new_balance >= 0, "balance underflow");
-        assert_eq(payer, storage.wallets.get_owner().at(payer), "unauthorized wallet access");
+        //assert_eq(payer, storage.wallets.get_owner().at(payer), "unauthorized wallet access");
         let new_wallet_note = WalletNote::new(payer, new_balance);
 
-        storage.wallets.get_balance().at(payer).replace(|current_balance| new_balance).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
+        storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
@@ -161,57 +172,3 @@ pub contract X402PrivatePaymentRouter {
         storage.payment_id.write(current_payment_id + 1)
     }
 }
-
-
-
-
-
-
-
-
-// pub contract Counter {
-//     // @param owner The address of the owner
-//     // @param counter A numerical value
-//     #[storage]
-//     struct Storage<Context> {
-//         owner: PublicImmutable<AztecAddress, Context>,
-//         counter: PublicMutable<u128, Context>,
-//     }
-//
-//     /// @dev Initialize the contract
-//     /// @param owner The address of the owner
-//     #[external("public")]
-//     #[initializer]
-//     fn constructor(owner: AztecAddress) {
-//         storage.owner.initialize(owner);
-//     }
-//
-//     /// @dev Retrieves the owner of the contract
-//     /// @return The owner of the contract
-//     #[external("public")]
-//     fn get_owner() -> AztecAddress {
-//         storage.owner.read()
-//     }
-//
-//     /// @dev Increments the counter
-//     #[external("private")]
-//     fn increment() {
-//         Counter::at(context.this_address()).increment_internal().enqueue(&mut context);
-//     }
-//
-//     /// @dev Retrieves the counter value
-//     /// @return The current counter value
-//     #[external("public")]
-//     #[view]
-//     fn get_counter() -> u128 {
-//         storage.counter.read()
-//     }
-//
-//     /// @dev Increments the counter
-//     #[external("public")]
-//     #[internal]
-//     fn increment_internal() {
-//         let current_value = storage.counter.read();
-//         storage.counter.write(current_value + 1);
-//     }
-// }
