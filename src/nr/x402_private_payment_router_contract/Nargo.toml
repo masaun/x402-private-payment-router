@@ -1,6 +1,5 @@
 [package]
-name = "X402_private_payment_router_contract"
-#name = "counter_contract"
+name = "x402_private_payment_router_contract"
 type = "contract"
 compiler_version = ">=1.0.0"
 authors = [""]

@@ -42,8 +42,8 @@ pub struct WalletNote {
 }
 
 impl WalletNote {
-    pub fn new(owner: AztecAddress, balance: Field) -> Self {
-        Self {  // "Self" is equivalent to "WalletNote" struct
+    pub fn new(owner: AztecAddress, balance: Field) -> WalletNote {
+        WalletNote {  // "Self" is equivalent to "WalletNote" struct
             owner,
             balance,
         }
