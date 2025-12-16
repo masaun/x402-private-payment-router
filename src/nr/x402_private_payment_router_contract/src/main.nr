@@ -22,10 +22,9 @@ pub contract X402PrivatePaymentRouter {
         note::{
             note_emission::OuterNoteEmission,
             note_getter_options::{NoteGetterOptions, SortOrder},
-            note_interface::NoteProperties,
+            note_interface::{NoteProperties, NoteHash, NoteType},
             note_viewer_options::NoteViewerOptions,
-            retrieved_note::RetrievedNote,
-            note_interface::{NoteHash, NoteType},
+            retrieved_note::RetrievedNote
         },
         protocol_types::{
             address::AztecAddress,
