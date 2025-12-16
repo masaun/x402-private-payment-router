@@ -1,4 +1,5 @@
 use dep::aztec::macros::aztec;
+use dep::uint_note;
 
 pub mod types;
 pub mod test;
@@ -18,7 +19,14 @@ pub contract X402PrivatePaymentRouter {
             },
         },
         //messages::logs::note,
-        //note::note_interface::{NoteHash, NoteType},
+        note::{
+            note_emission::OuterNoteEmission,
+            note_getter_options::{NoteGetterOptions, SortOrder},
+            note_interface::NoteProperties,
+            note_viewer_options::NoteViewerOptions,
+            retrieved_note::RetrievedNote,
+            note_interface::{NoteHash, NoteType},
+        },
         protocol_types::{
             address::AztecAddress,
             constants::{
@@ -41,6 +49,9 @@ pub contract X402PrivatePaymentRouter {
         },
         messages::message_delivery::MessageDelivery
     };
+
+    // @dev - Import the Note library
+    use uint_note::uint_note::{UintNote, PartialUintNote};
 
     // @dev - Import the note struct or/and the custom note struct
     use crate::types::wallet_note::{WalletNote};
@@ -107,7 +118,7 @@ pub contract X402PrivatePaymentRouter {
         let payer = context.msg_sender().unwrap();
 
         // @dev - Fetch the wallet note of the payer from the storage mapping.
-        let current_wallet_note = x402_private_payment_router.get_wallet_note(payer);
+        let current_wallet_note = storage.wallets.at(payer).get_note().content;
         
         let current_balance = current_wallet_note.get_balance();
         let new_balance = current_balance + amount;
@@ -130,10 +141,12 @@ pub contract X402PrivatePaymentRouter {
         //let msg_sender: AztecAddress = context.msg_sender().unwrap();
 
         // @dev - Fetch the wallet note of the payer from the storage mapping.
-        let current_wallet_note = x402_private_payment_router.get_wallet_note(payer);
+        let current_wallet_note = storage.wallets.at(payer).get_note().content;
+        //let current_wallet_note = x402_private_payment_router.get_wallet_note(payer).return_type();
 
         // @dev - Check if the payer has sufficient balance 
-        let current_balance = current_wallet_note.get_balance();
+        let current_balance = current_wallet_note.balance;
+        //let current_balance = current_wallet_note.get_balance();
         //assert_gt(current_balance, amount, "insufficient funds");
 
         let new_balance = current_balance - amount;
@@ -175,8 +188,11 @@ pub contract X402PrivatePaymentRouter {
     }
 
     /// @dev - Retrieves the wallet note for a given payer
-    #[external("private")]
-    fn get_wallet_note(payer: AztecAddress) -> WalletNote {
-        storage.wallets.at(payer).get_note()
-    }
+    /// @dev - [NOTE]: Basically, the return value of the private functions should be seen by anoone. Hence, "view" function should be defined for a private function.
+    // #[external("private")]
+    // #[view]
+    // //fn get_wallet_note(payer: AztecAddress) -> OuterNoteEmission<UintNote> {
+    // fn get_wallet_note(payer: AztecAddress) -> WalletNote {
+    //     storage.wallets.at(payer).get_note()
+    // }
 }
