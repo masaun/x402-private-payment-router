@@ -15,12 +15,18 @@ pub contract X402PrivatePaymentRouter {
             storage::storage,
             notes::{
                 note,
-                custom_note,
-                note_emission::OuterNoteEmission
+                custom_note
             },
         },
         //messages::logs::note,
-        //note::note_interface::{NoteHash, NoteType},
+        note::{
+            note_emission::OuterNoteEmission,
+            note_getter_options::{NoteGetterOptions, SortOrder},
+            note_interface::NoteProperties,
+            note_viewer_options::NoteViewerOptions,
+            retrieved_note::RetrievedNote,
+            note_interface::{NoteHash, NoteType},
+        },
         protocol_types::{
             address::AztecAddress,
             constants::{
@@ -44,7 +50,8 @@ pub contract X402PrivatePaymentRouter {
         messages::message_delivery::MessageDelivery
     };
 
-    use uint_note::uint_note::UintNote;
+    // @dev - Import the Note library
+    use uint_note::uint_note::{UintNote, PartialUintNote};
 
     // @dev - Import the note struct or/and the custom note struct
     use crate::types::wallet_note::{WalletNote};
