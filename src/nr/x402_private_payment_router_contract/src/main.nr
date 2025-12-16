@@ -102,10 +102,12 @@ pub contract X402PrivatePaymentRouter {
     /// @dev - Deposit and increments the payment ID
     #[external("private")]
     fn deposit(context: PrivateContext, amount: Field) {
+        let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
+
         let payer = context.msg_sender().unwrap();
 
         // @dev - Fetch the wallet note of the payer from the storage mapping.
-        let current_wallet_note = storage.wallets.at(payer).get_note();
+        let current_wallet_note = x402_private_payment_router.get_wallet_note(payer);
         
         let current_balance = current_wallet_note.get_balance();
         let new_balance = current_balance + amount;
@@ -128,10 +130,10 @@ pub contract X402PrivatePaymentRouter {
         //let msg_sender: AztecAddress = context.msg_sender().unwrap();
 
         // @dev - Fetch the wallet note of the payer from the storage mapping.
-        let current_wallet_note = storage.wallets.at(payer).get_note();
+        let current_wallet_note = x402_private_payment_router.get_wallet_note(payer);
 
         // @dev - Check if the payer has sufficient balance 
-        let current_balance = wallet_note.get_balance();
+        let current_balance = current_wallet_note.get_balance();
         //assert_gt(current_balance, amount, "insufficient funds");
 
         let new_balance = current_balance - amount;
@@ -170,5 +172,11 @@ pub contract X402PrivatePaymentRouter {
     fn increment_payment_id() {
         let current_payment_id: u128 = storage.payment_id.read();
         storage.payment_id.write(current_payment_id + 1)
+    }
+
+    /// @dev - Retrieves the wallet note for a given payer
+    #[external("private")]
+    fn get_wallet_note(payer: AztecAddress) -> WalletNote {
+        storage.wallets.at(payer).get_note()
     }
 }

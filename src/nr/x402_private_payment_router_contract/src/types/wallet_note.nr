@@ -49,11 +49,11 @@ impl WalletNote {
         }
     }
 
-    pub fn get_owner(self) -> AztecAddress {
+    pub fn get_owner(self: WalletNote) -> AztecAddress {
         self.owner
     }
 
-    pub fn get_balance(self) -> Field {
+    pub fn get_balance(self: WalletNote) -> Field {
         self.balance
     }
 }
