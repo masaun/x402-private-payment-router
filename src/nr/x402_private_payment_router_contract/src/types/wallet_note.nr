@@ -36,7 +36,7 @@ use aztec::{
  ****************************************/
 #[derive(Eq, Serialize, Packable)]
 #[note]
-pub struct WalletNote<Context> {
+pub struct WalletNote {
     owner: AztecAddress,
     balance: Field
 }
@@ -49,11 +49,11 @@ impl WalletNote {
         }
     }
 
-    pub fn get_owner(self: WalletNote) -> AztecAddress {
+    pub fn get_owner(self) -> AztecAddress {
         self.owner
     }
 
-    pub fn get_balance(self: WalletNote) -> Field {
+    pub fn get_balance(self) -> Field {
         self.balance
     }
 }
