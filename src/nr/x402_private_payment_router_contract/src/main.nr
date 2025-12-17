@@ -52,8 +52,14 @@ pub contract X402PrivatePaymentRouter {
     // @dev - Import the Note library
     use uint_note::uint_note::{UintNote, PartialUintNote};
 
+    // @dev - Import the compression library
+    use compressed_string::FieldCompressedString;
+
+    // @dev - Import the contract instance registry
+    use contract_instance_registry::ContractInstanceRegistry;
+
     // @dev - Import the note struct or/and the custom note struct
-    use crate::types::wallet_note::{WalletNote};
+    //use crate::types::wallet_note::{WalletNote};
 
     // @dev - Import the note struct or/and the custom note struct
     use crate::types::wallet_set::{WalletSet};
@@ -95,7 +101,7 @@ pub contract X402PrivatePaymentRouter {
         admin: PublicImmutable<AztecAddress, Context>,
         payment_id: PublicMutable<u128, Context>,  
         //wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
-        wallets: Map<AztecAddress, WalletSet<Context>, Context>,          // Private wallets: payer => balances
+        wallets: Map<AztecAddress, WalletSet<Context>, Context>,                    // Private wallets: payer => balances
     }
 
     /// @dev Initialize the contract
@@ -115,20 +121,28 @@ pub contract X402PrivatePaymentRouter {
 
     /// @dev - Deposit and increments the payment ID
     #[external("private")]
-    fn deposit(context: PrivateContext, amount: Field) {
+    fn deposit(
+        context: &mut PrivateContext,
+        private_balances: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
+        to: AztecAddress,
+        amount: u128,
+    ) {
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
         let payer = context.msg_sender().unwrap();
 
         // @dev - Fetch the wallet note of the payer from the storage mapping.
-        let current_wallet_note = storage.wallets.at(payer).get_note().content;
+        //let current_wallet_note = storage.wallets.at(payer).get_note().content;
         
-        let current_balance = current_wallet_note.get_balance();
-        let new_balance = current_balance + amount;
+        //let current_balance = current_wallet_note.get_balance();
+        //let new_balance = current_balance + amount;
 
-        let new_wallet_note = WalletNote::new(payer, new_balance);
+        //let new_wallet_note = WalletNote::new(payer, new_balance);
 
-        storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
+        // @dev - Increase the private balance of the payer's wallet by the deposited amount.
+        _increase_private_balance(private_balances, to, amount);
+
+        //storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
     }
 
     #[external("private")]
@@ -188,6 +202,20 @@ pub contract X402PrivatePaymentRouter {
     fn increment_payment_id() {
         let current_payment_id: u128 = storage.payment_id.read();
         storage.payment_id.write(current_payment_id + 1)
+    }
+
+    /// @notice Updates the given storage pointer `wallets` to increase the (private) balance of `to` wallet by `amount`
+    /// @param wallets - The storage pointer to the wallets, which includes the private balances
+    /// @param to The address of the recipient
+    /// @param amount The amount of tokens to increase the balance by
+    #[contract_library_method]
+    fn _increase_wallet_balance(
+        wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
+        to: AztecAddress,
+        amount: u128,
+    ) {
+        // Increases `amount` to the private balance of `to`, and emits a private balance note to `to` from `from`
+        wallets.at(to).add(to, amount).emit(to, MessageDelivery.CONSTRAINED_ONCHAIN);
     }
 
     /// @dev - Retrieves the wallet note for a given payer
