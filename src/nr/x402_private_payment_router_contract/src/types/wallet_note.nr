@@ -36,7 +36,7 @@ use aztec::{
  ****************************************/
 #[derive(Eq, Serialize, Packable)]
 #[note]
-pub struct WalletNote {
+pub struct WalletNote<Context> {
     owner: AztecAddress,
     balance: Field
 }
