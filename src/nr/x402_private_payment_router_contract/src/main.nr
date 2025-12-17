@@ -64,7 +64,7 @@ pub contract X402PrivatePaymentRouter {
     use crate::types::wallet_set::{WalletSet};
 
     // @dev - Import the PaymentCommitted event struct from the types module.
-    //use crate::types::payment_committed_event::{PaymentCommitted};
+    use crate::types::payment_committed_event::{PaymentCommitted};
 
     /*********************************
     *   @notice - Global constants   *
@@ -72,34 +72,9 @@ pub contract X402PrivatePaymentRouter {
     // gas-optimized max notes for initial transfer call
     global INITIAL_TRANSFER_CALL_MAX_NOTES: u32 = 2;
 
-    /******************************
-    *   @notice - Event structs   *
-    *******************************/
-    // @dev - Define the PaymentCommitted event to be called in the private function.
-    // @dev - [NOTE]: Since the PaymentCommitted event is called in the private function, the PaymentCommitted event must be defined inside this contract. (It can not be imported from the types module)
-    struct PaymentCommitted {
-        payment_hash: Field,
-        amount: Field,
-    }
-
-    // @dev - Implement Serialize for the PaymentCommitted event
-    global PAYMENT_COMMITTED_LEN: u32 = 2;
-    impl Serialize for PaymentCommitted {
-        type N = PAYMENT_COMMITTED_LEN;
-
-        fn serialize(self) -> [Field; PAYMENT_COMMITTED_LEN] { // @dev - [Field; 2] is expected to be returned.
-            [self.payment_hash, self.amount]
-        }
-    }
-
-    // Implement EventInterface for the PaymentCommitted event
-    impl EventInterface for PaymentCommitted {
-        fn get_event_type_id() -> EventSelector {
-            // The string must match your event's name and field types
-            EventSelector::from_signature("PaymentCommitted(Field,Field)")
-        }
-    }
-
+    /************************
+    *   @notice - Storage   *
+    *************************/
     #[storage]
     struct Storage<Context> {
         admin: PublicImmutable<AztecAddress, Context>,
@@ -108,6 +83,9 @@ pub contract X402PrivatePaymentRouter {
         wallets: Map<AztecAddress, WalletSet<Context>, Context>,                    // Private wallets: payer => balances
     }
 
+    /****************************
+    *   @notice - Constructor   *
+    ****************************/
     /// @dev Initialize the contract
     /// @param owner The address of the owner
     #[external("public")]
@@ -116,6 +94,9 @@ pub contract X402PrivatePaymentRouter {
         storage.admin.initialize(_admin);
     }
 
+    /*******************************
+    *   @notice - Main functions   *
+    *******************************/
     /// @dev Retrieves the owner of the contract
     /// @return The owner of the contract
     #[external("public")]
@@ -213,6 +194,10 @@ pub contract X402PrivatePaymentRouter {
         storage.payment_id.write(current_payment_id + 1)
     }
 
+
+    /*******************************************
+    *   @notice - Contract Library functions   *
+    ********************************************/
     /// @notice Updates the given storage pointer `wallets` to increase the (private) balance of `to` wallet by `amount`
     /// @param wallets - The storage pointer to the wallets, which includes the private balances
     /// @param to The address of the recipient
