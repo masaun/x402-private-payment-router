@@ -55,6 +55,9 @@ pub contract X402PrivatePaymentRouter {
     // @dev - Import the note struct or/and the custom note struct
     use crate::types::wallet_note::{WalletNote};
 
+    // @dev - Import the note struct or/and the custom note struct
+    use crate::types::wallet_set::{WalletSet};
+
     // @dev - Import the PaymentCommitted event struct from the types module.
     //use crate::types::payment_committed_event::{PaymentCommitted};
 
@@ -91,7 +94,8 @@ pub contract X402PrivatePaymentRouter {
     struct Storage<Context> {
         admin: PublicImmutable<AztecAddress, Context>,
         payment_id: PublicMutable<u128, Context>,  
-        wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
+        //wallets: Map<AztecAddress, PrivateMutable<WalletNote, Context>, Context>  // Private wallets: payer => balance
+        wallets: Map<AztecAddress, WalletSet<Context>, Context>,          // Private wallets: payer => balances
     }
 
     /// @dev Initialize the contract
