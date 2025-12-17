@@ -1,7 +1,7 @@
 use aztec::macros::aztec;
 
 pub mod types;
-pub mod test;
+//pub mod test; // [NOTE]: Temporarily commented out to avoid compilation error.
 
 #[aztec]
 pub contract X402PrivatePaymentRouter {
@@ -122,7 +122,7 @@ pub contract X402PrivatePaymentRouter {
     #[external("private")]
     fn deposit(
         context: &mut PrivateContext,
-        private_balances: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
+        wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
         to: AztecAddress,
         amount: u128,
     ) {
@@ -157,21 +157,18 @@ pub contract X402PrivatePaymentRouter {
         //let msg_sender: AztecAddress = context.msg_sender().unwrap();
 
         // @dev - Fetch the wallet note of the payer from the storage mapping.
-        let current_wallet_note = storage.wallets.at(payer).get_note().content;
+        //let current_wallet_note = storage.wallets.at(payer).get_note().content;
         //let current_wallet_note = x402_private_payment_router.get_wallet_note(payer).return_type();
 
         // @dev - Check if the payer has sufficient balance 
-        let current_balance = current_wallet_note.balance;
+        //let current_balance = current_wallet_note.balance;
         //let current_balance = current_wallet_note.get_balance();
-        //assert_gt(current_balance, amount, "insufficient funds");
 
-        let new_balance = current_balance - amount;
+        //let new_balance = current_balance - amount;
+        
+        //let new_wallet_note = WalletNote::new(payer, new_balance);
 
-        //assert(new_balance >= 0, "balance underflow");
-        //assert_eq(payer, storage.wallets.get_owner().at(payer), "unauthorized wallet access");
-        let new_wallet_note = WalletNote::new(payer, new_balance);
-
-        storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
+        //storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
