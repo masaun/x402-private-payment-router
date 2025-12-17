@@ -66,6 +66,11 @@ pub contract X402PrivatePaymentRouter {
     // @dev - Import the PaymentCommitted event struct from the types module.
     //use crate::types::payment_committed_event::{PaymentCommitted};
 
+    /*********************************
+    *   @notice - Global constants   *
+    *********************************/
+    // gas-optimized max notes for initial transfer call
+    global INITIAL_TRANSFER_CALL_MAX_NOTES: u32 = 2;
 
     /******************************
     *   @notice - Event structs   *
@@ -118,7 +123,7 @@ pub contract X402PrivatePaymentRouter {
         storage.admin.read()
     }
 
-    /// @dev - Deposit and increments the payment ID
+    /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
     fn deposit(
         to: AztecAddress,
@@ -128,18 +133,28 @@ pub contract X402PrivatePaymentRouter {
 
         let payer = context.msg_sender().unwrap();
 
-        // @dev - Fetch the wallet note of the payer from the storage mapping.
-        //let current_wallet_note = storage.wallets.at(payer).get_note().content;
-        
-        //let current_balance = current_wallet_note.get_balance();
-        //let new_balance = current_balance + amount;
-
-        //let new_wallet_note = WalletNote::new(payer, new_balance);
-
         // @dev - Increase the private balance of the payer's wallet by the deposited amount.
         _increase_wallet_balance(storage.wallets, to, amount);
+    }
 
-        //storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
+    /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
+    #[external("private")]
+    fn withdraw(
+        from: AztecAddress,
+        amount: u128,
+    ) {
+        let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
+
+        let payer = context.msg_sender().unwrap();
+
+        // @dev - Increase the private balance of the payer's wallet by the deposited amount.
+        _decrease_wallet_balance(
+            &mut context,
+            storage.wallets, 
+            from, 
+            amount,
+            INITIAL_TRANSFER_CALL_MAX_NOTES,
+        );
     }
 
     #[external("private")]
@@ -211,6 +226,68 @@ pub contract X402PrivatePaymentRouter {
         // Increases `amount` to the private balance of `to`, and emits a private balance note to `to` from `from`
         wallets.at(to).add(to, amount).emit(to, MessageDelivery.CONSTRAINED_ONCHAIN);
     }
+
+    /// @notice Decreases the private balance of `account` by `amount` and emits a private balance note with the change to account
+    /// @param context The private context
+    /// @param private_balances The storage pointer to the private balances
+    /// @param account The address of the account to decrease the balance of
+    /// @param amount The amount of tokens to decrease the balance by
+    /// @param max_notes The maximum number of notes to process in a single call
+    #[contract_library_method]
+    fn _decrease_wallet_balance(
+        context: &mut PrivateContext,
+        wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
+        account: AztecAddress,
+        amount: u128,
+        max_notes: u32,
+    ) {
+        // Subtracts `amount` from the private balance of `account`
+        let change = _subtract_balance(context, wallets, account, amount, max_notes);
+        // Increases `change` to the private balance of `account`, and emits a private balance note to account
+        wallets.at(account).add(account, change).emit(
+            account,
+            MessageDelivery.CONSTRAINED_ONCHAIN,
+        );
+    }
+
+    /// @notice Subtracts balance from private balance
+    /// @dev Subtracts amount from private balance and returns the change to the owner, recursively if necessary
+    /// @param context The private context
+    /// @param private_balances The storage pointer to the private balances
+    /// @param account The address of the account to subtract the balance from
+    /// @param amount The amount of tokens to subtract
+    /// @param max_notes The maximum number of notes to process in a single call
+    /// @return The change to return to the owner
+    #[contract_library_method]
+    fn _subtract_balance(
+        context: &mut PrivateContext,
+        wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
+        account: AztecAddress,
+        amount: u128,
+        max_notes: u32,
+    ) -> u128 {
+        let subtracted = wallets.at(account).try_sub(amount, max_notes);
+        if subtracted >= amount {
+            // We have achieved our goal of nullifying notes that add up to more than amount, so we return the change.
+            subtracted - amount
+        } else {
+            // Failing to subtract any amount means that the owner was unable to produce more notes that could be nullified.
+            assert(subtracted > 0, "Balance too low");
+
+            // try_sub failed to nullify enough notes to reach the target amount, so we compute the amount remaining
+            // and try again.
+            let remaining = amount - subtracted;
+
+            // @dev - [TODO]: Add the logic for changing the Token contract's balance.
+            // Token::at(context.this_address())
+            //     .recurse_subtract_balance_internal(account, remaining)
+            //     .call(context)
+
+            remaining
+        }
+    }
+
+
 
     /// @dev - Retrieves the wallet note for a given payer
     /// @dev - [NOTE]: Basically, the return value of the private functions should be seen by anoone. Hence, "view" function should be defined for a private function.
