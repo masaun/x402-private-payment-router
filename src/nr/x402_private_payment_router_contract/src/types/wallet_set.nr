@@ -14,9 +14,19 @@ use std::ops::Add;
 use uint_note::uint_note::UintNote;
 
 
-/****************************************
+/***********************************************************
+ *   @notice - Check whether it has a StorageSlot or not   *
+ ***********************************************************/
+// TODO(#13824): remove this impl once we allow structs to hold state variables.
+impl<Context> HasStorageSlot<1> for WalletSet<Context> {
+    fn get_storage_slot(self) -> Field {
+        self.balance.get_storage_slot()
+    }
+}
+
+/******************************************
  *   @notice - Set of Wallets (balance)   *
- ****************************************/
+ ******************************************/
 pub struct WalletSet<Context> {
     pub balance: PrivateSet<UintNote, Context>,
 }
