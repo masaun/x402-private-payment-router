@@ -1,5 +1,4 @@
-use dep::aztec::macros::aztec;
-use dep::uint_note;
+use aztec::macros::aztec;
 
 pub mod types;
 pub mod test;
