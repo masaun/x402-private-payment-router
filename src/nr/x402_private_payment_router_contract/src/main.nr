@@ -121,8 +121,6 @@ pub contract X402PrivatePaymentRouter {
     /// @dev - Deposit and increments the payment ID
     #[external("private")]
     fn deposit(
-        context: &mut PrivateContext,
-        wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
         to: AztecAddress,
         amount: u128,
     ) {
@@ -139,7 +137,7 @@ pub contract X402PrivatePaymentRouter {
         //let new_wallet_note = WalletNote::new(payer, new_balance);
 
         // @dev - Increase the private balance of the payer's wallet by the deposited amount.
-        _increase_private_balance(private_balances, to, amount);
+        _increase_wallet_balance(storage.wallets, to, amount);
 
         //storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
     }
