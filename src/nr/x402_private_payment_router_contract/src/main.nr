@@ -110,25 +110,42 @@ pub contract X402PrivatePaymentRouter {
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
     fn deposit(
+        token: AztecAddress,
         to: AztecAddress,
         amount: u128,
     ) {
+        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
+        // @dev - Store the x402PrivatePaymentRouterRegistry contract address into a variable
+        let X402_PRIVATE_PAYMENT_ROUTER_REGISTRY = context.this_address();
+
+        // @dev - Store the payer address into the payer variables
         let payer = context.msg_sender().unwrap();
 
         // @dev - Increase the private balance of the payer's wallet by the deposited amount.
         _increase_wallet_balance(storage.wallets, to, amount);
+
+        // @dev - Transfer a given amount of a given token from a payer's wallet to this contract (or, the Vault contract). 
+        Token::at(token)
+            .transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER_REGISTRY, amount, 0)
+            .call(&mut context);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
     #[external("private")]
     fn withdraw(
+        token: AztecAddress,
         from: AztecAddress,
         amount: u128,
     ) {
+        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
+        // @dev - Store the x402PrivatePaymentRouterRegistry contract address into a variable
+        let X402_PRIVATE_PAYMENT_ROUTER_REGISTRY = context.this_address();
+
+        // @dev - Store the payer address into the payer variables
         let payer = context.msg_sender().unwrap();
 
         // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
@@ -139,6 +156,11 @@ pub contract X402PrivatePaymentRouter {
             amount,
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
+
+        // @dev - Transfer a given amount of a given token from a payer's wallet to this contract (or, the Vault contract). 
+        Token::at(token)
+            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER_REGISTRY, payer, amount, 0)
+            .call(&mut context);
     }
 
     // @dev - Pay for a fees with the deposited-wallet balance (storage.walllets.at(payer).balance)
@@ -146,10 +168,15 @@ pub contract X402PrivatePaymentRouter {
     fn authorize_payment(
         payee: AztecAddress,
         payment_hash: Field,
+        token: AztecAddress,
         amount: u128,
         event_recipient: AztecAddress,
     ) {
+        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
+
+        // @dev - Store the x402PrivatePaymentRouterRegistry contract address into a variable
+        let X402_PRIVATE_PAYMENT_ROUTER_REGISTRY = context.this_address();
 
         // @dev - Create the payer instance, which the msg_sender is stored.
         let payer: AztecAddress = context.msg_sender().unwrap();
@@ -166,7 +193,10 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Increase the private balance of the payee's wallet. (= This is similar to increasing an internal balance of a mapping storage)
         _increase_wallet_balance(storage.wallets, payee, amount);
 
-        // @dev - [TODO]: Token transfer logic should be added here.
+        // @dev - Transfer a given amount of a given token from this contract (or, the Vault contract) to a payee's wallet. 
+        Token::at(token)
+            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER_REGISTRY, payee, amount, 0)
+            .call(&mut context);
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
