@@ -128,7 +128,7 @@ pub contract X402PrivatePaymentRouter {
 
         let payer = context.msg_sender().unwrap();
 
-        // @dev - Increase the private balance of the payer's wallet by the deposited amount.
+        // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
         _decrease_wallet_balance(
             &mut context,
             storage.wallets, 
@@ -138,31 +138,26 @@ pub contract X402PrivatePaymentRouter {
         );
     }
 
+    // @dev - Pay for a fees with the deposited-wallet balance (storage.walllets.at(payer).balance)
     #[external("private")]
     fn authorize_payment(
         payment_hash: Field,
-        amount: Field,
+        amount: u128,
         event_recipient: AztecAddress,
     ) {
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
         // @dev - Create the payer instance, which the msg_sender is stored.
         let payer: AztecAddress = context.msg_sender().unwrap();
-        //let msg_sender: AztecAddress = context.msg_sender().unwrap();
-
-        // @dev - Fetch the wallet note of the payer from the storage mapping.
-        //let current_wallet_note = storage.wallets.at(payer).get_note().content;
-        //let current_wallet_note = x402_private_payment_router.get_wallet_note(payer).return_type();
-
-        // @dev - Check if the payer has sufficient balance 
-        //let current_balance = current_wallet_note.balance;
-        //let current_balance = current_wallet_note.get_balance();
-
-        //let new_balance = current_balance - amount;
-        
-        //let new_wallet_note = WalletNote::new(payer, new_balance);
-
-        //storage.wallets.at(payer).replace(|current_wallet_note| new_wallet_note).emit(payer, MessageDelivery.CONSTRAINED_ONCHAIN);
+    
+        // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
+        _decrease_wallet_balance(
+            &mut context,
+            storage.wallets, 
+            payer, 
+            amount,
+            INITIAL_TRANSFER_CALL_MAX_NOTES,
+        );
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
@@ -174,7 +169,14 @@ pub contract X402PrivatePaymentRouter {
             event_recipient,
             MessageDelivery.UNCONSTRAINED_ONCHAIN,
         );
-        //PaymentCommitted { payment_hash, amount }.emit();
+    }
+
+    /// @dev - Increments the payment ID
+    #[external("public")] // @dev - [NOTE]: .write()/.read() methods can be used in "public" functions.
+    #[internal]
+    fn increment_payment_id() {
+        let current_payment_id: u128 = storage.payment_id.read();
+        storage.payment_id.write(current_payment_id + 1)
     }
 
     /// @dev Retrieves the current payment ID
@@ -184,14 +186,6 @@ pub contract X402PrivatePaymentRouter {
     #[view]
     fn get_payment_id() -> u128 {
         storage.payment_id.read()
-    }
-
-    /// @dev - Increments the payment ID
-    #[external("public")] // @dev - [NOTE]: .write()/.read() methods can be used in "public" functions.
-    #[internal]
-    fn increment_payment_id() {
-        let current_payment_id: u128 = storage.payment_id.read();
-        storage.payment_id.write(current_payment_id + 1)
     }
 
 

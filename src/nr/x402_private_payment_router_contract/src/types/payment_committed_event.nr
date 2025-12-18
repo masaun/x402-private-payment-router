@@ -36,15 +36,15 @@ use aztec::{
 };
 
 
-/****************************************
- *   @notice - Notes and Custom Notes   *
- ****************************************/
+/*******************************
+ *   @notice - Event structs   *
+ *******************************/
 global PAYMENT_COMMITTED_LEN: u32 = 2;
 
 // @dev - Event: PaymentCommitted event, which the backend will watch (encrypted)
 pub struct PaymentCommitted {
     pub payment_hash: Field,
-    pub amount: Field,
+    pub amount: u128,
 }
 
 // @dev - Implement Serialize for the PaymentCommitted event
@@ -52,7 +52,7 @@ impl Serialize for PaymentCommitted {
     type N = PAYMENT_COMMITTED_LEN;
 
     fn serialize(self) -> [Field; PAYMENT_COMMITTED_LEN] { // @dev - [Field; 2] is expected to be returned.
-        [self.payment_hash, self.amount]
+        [self.payment_hash, self.amount as Field]          // @dev - Since the return type is [Field; 2], we convert u128 to Field (for a given "amount").
     }
 }
 
