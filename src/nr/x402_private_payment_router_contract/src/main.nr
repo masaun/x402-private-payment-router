@@ -141,6 +141,7 @@ pub contract X402PrivatePaymentRouter {
     // @dev - Pay for a fees with the deposited-wallet balance (storage.walllets.at(payer).balance)
     #[external("private")]
     fn authorize_payment(
+        payee: AztecAddress,
         payment_hash: Field,
         amount: u128,
         event_recipient: AztecAddress,
@@ -158,6 +159,9 @@ pub contract X402PrivatePaymentRouter {
             amount,
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
+
+        // @dev - Increase the private balance of the payee's wallet
+        _increase_wallet_balance(storage.wallets, payee, amount);
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
