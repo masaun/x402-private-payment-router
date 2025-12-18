@@ -119,6 +119,8 @@ pub contract X402PrivatePaymentRouter {
 
         // @dev - Increase the private balance of the payer's wallet by the deposited amount.
         _increase_wallet_balance(storage.wallets, to, amount);
+
+        // @dev - [TODO]: Token transfer logic to the Vault contract (or this contract) from a payer's wallet should be added here.
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
@@ -139,6 +141,8 @@ pub contract X402PrivatePaymentRouter {
             amount,
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
+
+        // @dev - [TODO]: Token transfer logic from the Vault contract (or this contract) to a payer's wallet should be added here.
     }
 
     // @dev - Pay for a fees with the deposited-wallet balance (storage.walllets.at(payer).balance)
@@ -166,7 +170,7 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Increase the private balance of the payee's wallet. (= This is similar to increasing an internal balance of a mapping storage)
         _increase_wallet_balance(storage.wallets, payee, amount);
 
-        // @dev - [TODO]: Token transfer logic should be added here.
+        // @dev - [TODO]: Token transfer logic in the Vault contract (or this contract) should be added here.
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.
