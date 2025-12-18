@@ -48,6 +48,9 @@ pub contract X402PrivatePaymentRouter {
         messages::message_delivery::MessageDelivery
     };
 
+    // @dev - Import the Token contract (token_contract/src/main.nr)
+    use token::Token;
+
     // @dev - Import the Note library
     use uint_note::uint_note::{UintNote, PartialUintNote};
 
@@ -151,7 +154,7 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Create the payer instance, which the msg_sender is stored.
         let payer: AztecAddress = context.msg_sender().unwrap();
     
-        // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
+        // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount. (= This is similar to decreasing an internal balance of a mapping storage).
         _decrease_wallet_balance(
             &mut context,
             storage.wallets, 
@@ -160,8 +163,10 @@ pub contract X402PrivatePaymentRouter {
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
 
-        // @dev - Increase the private balance of the payee's wallet
+        // @dev - Increase the private balance of the payee's wallet. (= This is similar to increasing an internal balance of a mapping storage)
         _increase_wallet_balance(storage.wallets, payee, amount);
+
+        // @dev - [TODO]: Token transfer logic should be added here.
 
         // @dev - Public function: The payment_id is incremented internally.
         x402_private_payment_router.increment_payment_id().enqueue(&mut context); // @dev - enqueue() method should be used for a "public" function called inside the private function.

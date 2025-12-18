@@ -1,7 +1,10 @@
 [workspace]
 members = [
-    "src/nr/x402_private_payment_router_contract"
+    "src/nr/x402_private_payment_router_contract",
+    #"src/nr/token_contract"
 ]
 
 [benchmark]
-counter = "benchmarks/counter.benchmark.ts"
+x402_private_payment_router_contract = "benchmarks/x402_private_payment_router_contract.benchmark.ts"
+token = "benchmarks/token_contract.benchmark.ts"
+#counter = "benchmarks/counter.benchmark.ts"
