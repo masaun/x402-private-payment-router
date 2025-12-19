@@ -34,7 +34,10 @@ pub unconstrained fn setup_contract(
     let private_vault_contract_address = deploy_private_vault_contract(&mut env, owner);
     
     // @dev - Deploy the Token contract with initial supply to the owner
-    let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
+    //let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
+    
+    // @dev - Deploy the Token contract with initial supply to the owner + Mint role to the owner
+    let token_contract_address = deploy_token_with_minter(&mut env, owner, owner);
 
     // @dev - Return values
     (env, private_vault_contract_address, token_contract_address, owner, user)
@@ -73,6 +76,13 @@ pub unconstrained fn deploy_token_contract_with_initial_supply(
 
     token_contract_address
 }
+
+
+
+
+/*********************************************************
+ *   @notice - Token contract related helper functions   *
+ *********************************************************/
 
 pub unconstrained fn setup_with_initial_supply(
     with_account_contracts: bool,
