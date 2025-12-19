@@ -32,6 +32,21 @@
 
 <br>
 
+## Build
+
+The complete build pipeline includes cleaning, compiling Noir contracts, and generating TypeScript artifacts:
+
+```bash
+yarn ccc
+```
+
+This runs:
+- `yarn clean` - Removes all build artifacts
+- `yarn compile` - Compiles Noir contracts using aztec-nargo
+- `yarn codegen` - Generates TypeScript bindings from compiled contracts
+
+<br>
+
 ## Smart Contract Test
 ### Noir tests only
 Test your contract logic directly:
