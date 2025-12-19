@@ -106,15 +106,12 @@ pub contract PrivateVault {
         // @dev - Store the PrivateVault contract address into a variable
         let PRIVATE_VAULT = context.this_address();
 
-        // @dev - Store the payer address into the payer variables, which is the which is the X402PrivatePaymentRouter contract
-        let payer = context.msg_sender().unwrap();
-
         // @dev - Increase the private balance of the payer's wallet by the deposited amount.
         _increase_vault_wallet_balance(storage.vault_wallets, PRIVATE_VAULT, amount);
 
         // @dev - Transfer a given amount of a given token from a payer's wallet to this contract (or, the Vault contract). 
         Token::at(token)
-            .transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0)
+            .transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
             .call(&mut context);
     }
 
@@ -122,7 +119,7 @@ pub contract PrivateVault {
     #[external("private")]
     fn withdraw(
         token: AztecAddress,
-        from: AztecAddress,
+        to: AztecAddress,
         amount: u128,
     ) {
         // @dev - Create the contract instance of the PrivateVault contract
@@ -130,9 +127,6 @@ pub contract PrivateVault {
 
         // @dev - Store the PrivateVault contract address into a variable
         let PRIVATE_VAULT = context.this_address();
-
-        // @dev - Store the payer address, which is the X402PrivatePaymentRouter contract, into the payer variables
-        let payer = context.msg_sender().unwrap();
 
         // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
         _decrease_vault_wallet_balance(
@@ -145,7 +139,7 @@ pub contract PrivateVault {
 
         // @dev - Transfer a given amount of a given token from this vault contract to a payer's wallet. 
         Token::at(token)
-            .transfer_private_to_private(PRIVATE_VAULT, payer, amount, 0)
+            .transfer_private_to_private(PRIVATE_VAULT, to, amount, 0)
             .call(&mut context);
     }
 
