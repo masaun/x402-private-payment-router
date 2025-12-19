@@ -13,26 +13,29 @@ use token::Token; // @dev - Import the Token contract (token_contract/src/main.n
 
 #[test]
 unconstrained fn deposit_success() {
+    let initial_message = "-------------- The initial line!!! --------------";
+    debug_log(initial_message);
+    
     let (env, private_vault_contract_address, token_contract_address, admin, payer) = utils::setup_contract(false);
 
     let private_vault = PrivateVault::at(private_vault_contract_address);
     let token = Token::at(token_contract_address);
 
-    let amount = 1000 as u128;
+    let amount = (1000 as u128);
 
     // @dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         env,
         admin,
         admin,
-        token.transfer_private_to_private(admin, payer, amount, 0)
+        token.transfer_private_to_private(admin, payer, amount + 1000, 0)
     );
 
     // @dev - First, transfer tokens from admin (who has initial supply) to payer
     env.call_private(admin, token.transfer_private_to_private(admin, payer, amount + 1000, 0));
 
     // @dev - Check balances after calling the token.transfer_private_to_private(), which transferring a given amount of a given token from admin to the payer's wallet.
-    utils::check_private_balance(env, token_contract_address, payer, amount);
+    utils::check_private_balance(env, token_contract_address, payer, amount + 1000);
 
 
     // @dev - [Time Travel]: Advance block to ensure the transfer is processed

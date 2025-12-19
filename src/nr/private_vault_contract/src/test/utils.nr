@@ -37,10 +37,13 @@ pub unconstrained fn setup_contract(
     //let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
     
     // @dev - Deploy the Token contract with initial supply to the owner + Mint role to the owner
-    let token_contract_address = deploy_token_with_minter(&mut env, owner, owner);
+    let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
+    //let token_contract_address = deploy_token_with_minter(&mut env, owner, owner);
+    //let (env, token_contract_address, owner, recipient) = setup_and_mint_to_private_without_minter(true);
 
     // @dev - Return values
     (env, private_vault_contract_address, token_contract_address, owner, user)
+    //(env, private_vault_contract_address, token_contract_address, owner, recipient)
 }
 
 pub unconstrained fn deploy_private_vault_contract(
@@ -72,6 +75,11 @@ pub unconstrained fn deploy_token_contract_with_initial_supply(
     let token_contract_address = env.deploy("@token_contract/Token").with_public_initializer(
         owner,
         initializer_call_interface,
+    );
+
+    env.call_private(
+        owner,
+        Token::at(token_contract_address).transfer_public_to_private(owner, owner, mint_amount, 0),
     );
 
     token_contract_address
