@@ -1,7 +1,7 @@
 use aztec::macros::aztec;
 
 pub mod types;
-//pub mod test;
+pub mod test;
 
 #[aztec]
 pub contract PrivateVault {
@@ -69,7 +69,7 @@ pub contract PrivateVault {
     #[storage]
     struct Storage<Context> {
         admin: PublicImmutable<AztecAddress, Context>,
-        vault_wallets: Map<AztecAddress, VaultWalletSet<Context>, Context>,                    // Private wallets: payer => balances
+        vault_wallets: Map<AztecAddress, VaultWalletSet<Context>, Context>,  // Private wallets: payer => balances
     }
 
     /****************************
