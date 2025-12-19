@@ -31,10 +31,17 @@ unconstrained fn deposit_success() {
     // @dev - First, transfer tokens from admin (who has initial supply) to payer
     env.call_private(admin, token.transfer_private_to_private(admin, payer, amount + 1000, 0));
 
+    // @dev - Check balances after calling the token.transfer_private_to_private(), which transferring a given amount of a given token from admin to the payer's wallet.
+    utils::check_private_balance(env, token_contract_address, payer, amount);
+
+
     // @dev - [Time Travel]: Advance block to ensure the transfer is processed
     // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
     let block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
     env.mine_block_at(block_timestamp);
+
+    let token_transfer_message = "-------------- The test of the token.transfer_private_to_private() has been done!!! --------------";
+    debug_log(token_transfer_message);
 
     //@dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
     authwit_cheatcodes::add_private_authwit_from_call_interface(
