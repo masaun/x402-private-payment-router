@@ -15,17 +15,49 @@ use token::Token; // @dev - Import the Token contract (token_contract/src/main.n
 unconstrained fn deposit_success() {
     let (env, private_vault_contract_address, token_contract_address, admin, payer) = utils::setup_contract(false);
 
+    let private_vault = PrivateVault::at(private_vault_contract_address);
     let token = Token::at(token_contract_address);
+
     let amount = 1000 as u128;
 
-    // @dev - Call the deposit() function
-    env.call_private(admin, PrivateVault::at(private_vault_contract_address).deposit(token_contract_address, payer, amount));
+    // @dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
+    authwit_cheatcodes::add_private_authwit_from_call_interface(
+        env,
+        admin,
+        admin,
+        token.transfer_private_to_private(admin, payer, amount, 0)
+    );
 
-    //let private_vault = env.view_public(PrivateVault::at(contract_address).get_admin());
-    //assert(private_vault == 1);
+    // @dev - First, transfer tokens from admin (who has initial supply) to payer
+    env.call_private(admin, token.transfer_private_to_private(admin, payer, amount + 1000, 0));
+
+    // @dev - [Time Travel]: Advance block to ensure the transfer is processed
+    // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
+    let block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
+    env.mine_block_at(block_timestamp);
+
+    //@dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
+    authwit_cheatcodes::add_private_authwit_from_call_interface(
+        env,
+        admin,
+        payer,
+        private_vault.deposit(token_contract_address, payer, amount + 1000)
+    );
+
+    // @dev - Call the deposit() function (now payer has tokens to deposit and authwit is set)
+    env.call_private(payer, private_vault.deposit(token_contract_address, payer, amount));
+
+    // @dev - Check balances after calling the deposit(), which the payer's private balance should be decreased by 'amount'
+    // utils::check_private_balance(
+    //     env,
+    //     token_contract_address,
+    //     owner,
+    //     mint_amount - transfer_amount,
+    // );
+    // utils::check_private_balance(env, token_contract_address, recipient, transfer_amount);
 
     // @dev - Logging the simple messages
-    let test_message = "-------------- This is the test of the deposit() --------------";
+    let test_message = "-------------- The test of the deposit() has been done!!! --------------";
     debug_log(test_message);
 }
 

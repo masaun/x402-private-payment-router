@@ -10,7 +10,7 @@ pub global initial_supply: u128 = 1_000_000 as u128;
 
 pub unconstrained fn setup_contract(
     with_account_contracts: bool,
-) -> (&mut TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
+) -> (TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
     // Setup env, generate keys
     let mut env = TestEnvironment::new();
     let (owner, user) = if with_account_contracts {
@@ -27,7 +27,7 @@ pub unconstrained fn setup_contract(
     let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
 
     // @dev - Return values
-    (&mut env, private_vault_contract_address, token_contract_address, owner, user)
+    (env, private_vault_contract_address, token_contract_address, owner, user)
 }
 
 pub unconstrained fn deploy_private_vault_contract(
