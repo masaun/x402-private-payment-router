@@ -18,7 +18,7 @@ pub global initial_supply: u128 = 1_000_000 as u128;
 pub unconstrained fn setup_contract(
     with_account_contracts: bool,
 ) -> (TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
-    // Setup env, generate keys
+    // @dev - Setup env, generate keys
     let mut env = TestEnvironment::new();
     let (owner, user) = if with_account_contracts {
         let owner = env.create_contract_account();
@@ -30,17 +30,14 @@ pub unconstrained fn setup_contract(
         (owner, user)
     };
 
-    // @dev - Deploy the PrivateVault contract
-    let private_vault_contract_address = deploy_private_vault_contract(&mut env, owner);
-    
-    // @dev - Deploy the Token contract with initial supply to the owner
-    //let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
-    
     // @dev - Deploy the Token contract with initial supply to the owner + Mint role to the owner
     let token_contract_address = deploy_token_contract_with_initial_supply(&mut env, owner, initial_supply, owner);
     //let token_contract_address = deploy_token_with_minter(&mut env, owner, owner);
     //let (env, token_contract_address, owner, recipient) = setup_and_mint_to_private_without_minter(true);
 
+    // @dev - Deploy the PrivateVault contract
+    let private_vault_contract_address = deploy_private_vault_contract(&mut env, owner);
+    
     // @dev - Return values
     (env, private_vault_contract_address, token_contract_address, owner, user)
     //(env, private_vault_contract_address, token_contract_address, owner, recipient)
