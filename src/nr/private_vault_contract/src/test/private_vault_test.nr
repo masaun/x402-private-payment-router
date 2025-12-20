@@ -18,7 +18,6 @@ unconstrained fn deposit_success() {
 
     // @dev - Setup (Deploy) the smart contracts and get necessary addresses    
     //let (env, private_vault_contract_address, token_contract_address, admin, payer) = utils::setup_contract(false);
-
     let (mut env, token_contract_address, admin, payer) = utils::setup_and_mint_to_private_without_minter(true);
     let private_vault_contract_address = utils::deploy_private_vault_contract(&mut env, admin);
 
@@ -26,18 +25,21 @@ unconstrained fn deposit_success() {
     let private_vault = PrivateVault::at(private_vault_contract_address);
     let token = Token::at(token_contract_address);
 
+
+    // @dev - Create the "transferFrom" call interface
     let transfer_amount = (1000 as u128);
-    let transfer_private_from_call_interface = Token::at(token_contract_address)
-        .transfer_private_to_private(admin, payer, transfer_amount, 1);
+    let transfer_private_from_call_interface = token.transfer_private_to_private(admin, payer, transfer_amount, 1);
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         env,
         admin,
         payer,
         transfer_private_from_call_interface,
     );
-    // Transfer tokens using new API
+
+    // @dev - Transfer tokens using a private call method, which is the new API
     env.call_private(payer, transfer_private_from_call_interface);
-    // Check balances
+    
+    // @dev - Check balances
     utils::check_private_balance(
         env,
         token_contract_address,
