@@ -54,7 +54,7 @@ unconstrained fn deposit_success() {
     // ---------------------------- The original test code ---------------------------- //
 
 
-    // let amount = (1000 as u128);
+    let amount = (1000 as u128);
 
     // // @dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
     // authwit_cheatcodes::add_private_authwit_from_call_interface(
@@ -71,24 +71,24 @@ unconstrained fn deposit_success() {
     // utils::check_private_balance(env, token_contract_address, payer, amount + 1000);
 
 
-    // // @dev - [Time Travel]: Advance block to ensure the transfer is processed
-    // // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
-    // let block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
-    // env.mine_block_at(block_timestamp);
+    // @dev - [Time Travel]: Advance block to ensure the transfer is processed
+    // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
+    let block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
+    env.mine_block_at(block_timestamp);
 
-    // let token_transfer_message = "-------------- The test of the token.transfer_private_to_private() has been done!!! --------------";
-    // debug_log(token_transfer_message);
+    let token_transfer_message = "-------------- The test of the token.transfer_private_to_private() has been done!!! --------------";
+    debug_log(token_transfer_message);
 
-    // //@dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
-    // authwit_cheatcodes::add_private_authwit_from_call_interface(
-    //     env,
-    //     admin,
-    //     payer,
-    //     private_vault.deposit(token_contract_address, payer, amount + 1000)
-    // );
+    //@dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
+    authwit_cheatcodes::add_private_authwit_from_call_interface(
+        env,
+        admin,
+        payer,
+        private_vault.deposit(token_contract_address, payer, amount)
+    );
 
-    // // @dev - Call the deposit() function (now payer has tokens to deposit and authwit is set)
-    // env.call_private(payer, private_vault.deposit(token_contract_address, payer, amount));
+    // @dev - Call the deposit() function (now payer has tokens to deposit and authwit is set)
+    env.call_private(payer, private_vault.deposit(token_contract_address, payer, amount));
 
     // // @dev - Check balances after calling the deposit(), which the payer's private balance should be decreased by 'amount'
     // // utils::check_private_balance(
