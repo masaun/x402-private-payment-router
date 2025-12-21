@@ -17,9 +17,12 @@ use uint_note::uint_note::{UintNote};
 use token::Token; // @dev - Import the Token contract (token_contract/src/main.nr)
 
 
+/**
+ * @notice - The smart contract test for the deposit() of the PrivateVault contract
+ */
 #[test]
 unconstrained fn deposit_success() {
-    let initial_message = "-------------- The initial line!!! --------------";
+    let initial_message = "-------------- The initial line of the deposit_success test for the PrivateVault#deposit()!!! --------------";
     debug_log(initial_message);
 
     // @dev - Setup (Deploy) the smart contracts and get necessary addresses    
@@ -62,7 +65,7 @@ unconstrained fn deposit_success() {
 
 
     // -------------------------------------------------------------------------------- //
-    //        Calling the deposit() of the x402PrivatePaymentRouter contract            //
+    //        Calling the deposit() of the PrivateVault contract            //
     // -------------------------------------------------------------------------------- //
 
     let amount_to_be_deposited = (1000 as u128);
@@ -75,7 +78,7 @@ unconstrained fn deposit_success() {
     let token_transfer_message = "-------------- The test of the token.transfer_private_to_private() has been done!!! --------------";
     debug_log(token_transfer_message);
 
-    // @dev - The X402PrivatePaymentRouter#deposit() internally calls token.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
+    // @dev - The PrivateVault#deposit() internally calls token.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
     // @dev - So we need to authorize the PrivateVault contract to transfer tokens on behalf of payer
     // @dev - The "auth witness" must be for the token transfer that happens INSIDE the deposit function. 
     // @dev - Since the X402PrivatePaymentRouter contract will transfer a Token to the PrivateVault on behalf of the payer when the X402PrivatePaymentRouter#deposit() is called, the authorization (= auth witness) will not be needed when the X402PrivatePaymentRouter#deposit() will be called.
@@ -88,7 +91,7 @@ unconstrained fn deposit_success() {
         transfer_in_deposit_call_interface,
     );
 
-    // @dev - Call the deposit() function (now payer has tokens to deposit and authwit is set for the internal token transfer)
+    // @dev - Call the PrivateVault#deposit() -> now payer has tokens to deposit and authwit is set for the internal token transfer
     env.call_private(payer, private_vault.deposit(token_contract_address, payer, amount_to_be_deposited));
 
     // @dev - Get the token balances after the deposit
@@ -97,7 +100,7 @@ unconstrained fn deposit_success() {
     debug_log_format("--------- balance_of_private_vault: {0} ---------", [balance_of_private_vault as Field]);
     debug_log_format("--------- balance_of_payer_after_deposit: {0} ---------", [balance_of_payer_after_deposit as Field]);
 
-    // @dev - Check balances after calling the X402PrivatePaymentRouter#deposit(), which the payer's private balance should be decreased by 'amount_to_be_deposited' and the PrivateVault contract's private balance should be increased by 'amount_to_be_deposited'.
+    // @dev - Check balances after calling the PrivateVault#deposit(), which the payer's private balance should be decreased by 'amount_to_be_deposited' and the PrivateVault contract's private balance should be increased by 'amount_to_be_deposited'.
     utils::check_private_balance(
         env,
         token_contract_address,
@@ -107,15 +110,21 @@ unconstrained fn deposit_success() {
     utils::check_private_balance(env, token_contract_address, payer, transfer_amount - amount_to_be_deposited);
 
     // @dev - Logging the simple messages
-    let test_message = "-------------- The test of the deposit() has been done!!! --------------";
+    let test_message = "-------------- The test of the PrivateVault#deposit() has been done!!! --------------";
     debug_log(test_message);
 }
 
+/**
+ * @notice - The smart contract test for the withdraw() of the PrivateVault contract
+ */
 #[test]
 unconstrained fn withdraw_success() {
     // [TODO]:
 }
 
+/**
+ * @notice - The smart contract test - Fail to the initialize in the PrivateVault contract
+ */
 #[test]
 unconstrained fn does_it_fail_to_call_the_initializer() {
     // let mut env = aztec::test::helpers::test_environment::TestEnvironment::new();
