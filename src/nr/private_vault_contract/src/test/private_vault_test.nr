@@ -5,7 +5,13 @@ use crate::{
 use aztec::{
     note::constants::MAX_NOTES_PER_PAGE, 
     test::helpers::authwit as authwit_cheatcodes,
-    oracle::debug_log::{ debug_log, debug_log_format }
+    oracle::debug_log::{ 
+        debug_log,
+        debug_log_format,
+        debug_log_format_slice,
+        debug_log_format_with_level,
+        debug_log_with_level,
+    }    
 };
 use uint_note::uint_note::{UintNote};
 use token::Token; // @dev - Import the Token contract (token_contract/src/main.nr)
@@ -49,27 +55,11 @@ unconstrained fn deposit_success() {
     utils::check_private_balance(env, token_contract_address, payer, transfer_amount);
 
 
-    // ---------------------------- The original test code ---------------------------- //
-    // ---------------------------- The original test code ---------------------------- //
-    // ---------------------------- The original test code ---------------------------- //
-
+    // -------------------------------------------------------------------------------- //
+    //        Calling the deposit() of the x402PrivatePaymentRouter contract            //
+    // -------------------------------------------------------------------------------- //
 
     let amount_to_be_deposited = (1000 as u128);
-
-    // // @dev - Authorize the PrivateVault contract to transfer tokens on behalf of payer
-    // authwit_cheatcodes::add_private_authwit_from_call_interface(
-    //     env,
-    //     admin,
-    //     admin,
-    //     token.transfer_private_to_private(admin, payer, amount + 1000, 0)
-    // );
-
-    // // @dev - First, transfer tokens from admin (who has initial supply) to payer
-    // env.call_private(admin, token.transfer_private_to_private(admin, payer, amount + 1000, 0));
-
-    // // @dev - Check balances after calling the token.transfer_private_to_private(), which transferring a given amount of a given token from admin to the payer's wallet.
-    // utils::check_private_balance(env, token_contract_address, payer, amount + 1000);
-
 
     // @dev - [Time Travel]: Advance block to ensure the transfer is processed
     // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
