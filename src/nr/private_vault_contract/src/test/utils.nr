@@ -65,7 +65,7 @@ pub unconstrained fn deploy_token_contract_with_initial_supply(
         "TestToken0000000000000000000000",
         "TT00000000000000000000000000000",
         18,
-        initial_supply,
+        initial_supply, // @dev - 1_000_000 as u128
         to,
         AztecAddress::zero(),
     );

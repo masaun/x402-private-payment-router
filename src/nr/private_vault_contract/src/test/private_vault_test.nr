@@ -45,6 +45,12 @@ unconstrained fn deposit_success() {
     // @dev - Transfer tokens using a private call method, which is the new API
     env.call_private(payer, transfer_private_from_call_interface);
     
+    // @dev - Get the token balances after the transfer
+    let balance_of_admin = utils::get_private_balance(env, token_contract_address, admin);
+    let balance_of_payer = utils::get_private_balance(env, token_contract_address, payer);
+    debug_log_format("--------- balance_of_admin: {0} ---------", [balance_of_admin as Field]);
+    debug_log_format("--------- balance_of_payer: {0} ---------", [balance_of_payer as Field]);
+
     // @dev - Check balances
     utils::check_private_balance(
         env,
@@ -84,6 +90,12 @@ unconstrained fn deposit_success() {
 
     // @dev - Call the deposit() function (now payer has tokens to deposit and authwit is set for the internal token transfer)
     env.call_private(payer, private_vault.deposit(token_contract_address, payer, amount_to_be_deposited));
+
+    // @dev - Get the token balances after the deposit
+    let balance_of_private_vault = utils::get_private_balance(env, token_contract_address, private_vault_contract_address);
+    let balance_of_payer_after_deposit = utils::get_private_balance(env, token_contract_address, payer);
+    debug_log_format("--------- balance_of_private_vault: {0} ---------", [balance_of_private_vault as Field]);
+    debug_log_format("--------- balance_of_payer_after_deposit: {0} ---------", [balance_of_payer_after_deposit as Field]);
 
     // @dev - Check balances after calling the X402PrivatePaymentRouter#deposit(), which the payer's private balance should be decreased by 'amount_to_be_deposited' and the PrivateVault contract's private balance should be increased by 'amount_to_be_deposited'.
     utils::check_private_balance(
