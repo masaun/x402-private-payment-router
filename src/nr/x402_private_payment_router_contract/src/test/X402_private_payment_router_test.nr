@@ -18,7 +18,12 @@ use aztec::{
     }    
 };
 use uint_note::uint_note::{UintNote};
-use token::Token; // @dev - Import the Token contract (token_contract/src/main.nr)
+
+// @dev - Import the Token contract (token_contract/src/main.nr)
+use token::{
+    Token,
+    test::utils::{self, mint_amount}
+};
 
 
 /**
