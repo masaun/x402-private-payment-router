@@ -19,10 +19,16 @@ use aztec::{
 };
 use uint_note::uint_note::{UintNote};
 
+// @dev - Import the PrivateVault contract (private_vault_contract/src/main.nr)
+use private_vault::{
+    PrivateVault,
+    test::utils::{self as private_vault_utils},
+};
+
 // @dev - Import the Token contract (token_contract/src/main.nr)
 use token::{
     Token,
-    test::utils::{self, mint_amount}
+    test::utils::{self as token_utils, mint_amount}
 };
 
 
@@ -63,7 +69,21 @@ unconstrained fn withdraw_success() {
  * @notice - Helper functions for the X402PrivatePaymentRouter#deposit()
  */
 pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contract() -> (TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
-    // [TODO]:
+    let initial_message = "-------------- The initial line of the call_deposit_function_of_x402_private_payment_router_contract() to call the X402PrivatePaymentRouter#deposit()!!! --------------";
+    debug_log(initial_message);
+
+    // @dev - Setup (Deploy) the smart contracts and get necessary addresses    
+    //let (env, private_vault_contract_address, token_contract_address, admin, payer) = utils::setup_contract(false);
+    let (mut env, token_contract_address, admin, payer) = token::test::utils::setup_and_mint_to_private_without_minter(true);
+    let private_vault_contract_address = private_vault::test::utils::deploy_private_vault_contract(&mut env, admin);
+
+    // @dev - Create the contract instance of both contracts the PrivateVault and the Token.
+    let private_vault = PrivateVault::at(private_vault_contract_address);
+    let token = Token::at(token_contract_address);
+
+    //----------------------------//
+    //    Original Code           //
+    //----------------------------//
 
     // let (env, contract_address, owner, payer) = utils::setup_contract(false);
 
