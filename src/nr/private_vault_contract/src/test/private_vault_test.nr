@@ -49,9 +49,13 @@ unconstrained fn withdraw_success() {
 }
 
 
-/****************************************************************
- *   @notice - Helper functions for the PrivateVault#deposit()  *
- ****************************************************************/
+/*********************************
+ *   @notice - Helper functions  *
+ *********************************/
+ 
+/**
+ * @notice - Helper functions for the PrivateVault#deposit()
+ */
 pub unconstrained fn call_deposit_function_of_private_vault_contract() -> (TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
     let initial_message = "-------------- The initial line of the call_deposit_of_private_vault() to call the PrivateVault#deposit()!!! --------------";
     debug_log(initial_message);
@@ -144,10 +148,9 @@ pub unconstrained fn call_deposit_function_of_private_vault_contract() -> (TestE
     (env, private_vault_contract_address, token_contract_address, admin, payer)
 }
 
-
-/****************************************************************
- *  @notice - Helper functions for the PrivateVault#withdraw()  *
- ****************************************************************/
+/**
+ * @notice - Helper functions for the PrivateVault#withdraw()
+ */
 pub unconstrained fn call_withdraw_function_of_private_vault_contract(
     env: TestEnvironment,
     private_vault_contract_address: AztecAddress,
