@@ -18,12 +18,12 @@ pub unconstrained fn setup_contract(
         (owner, payer)
     };
 
-    let contract_address = deploy_contract(&mut env, owner);
+    let contract_address = deploy_x402_private_payment_router_contract(&mut env, owner);
 
     (&mut env, contract_address, owner, payer)
 }
 
-pub unconstrained fn deploy_contract(
+pub unconstrained fn deploy_x402_private_payment_router_contract(
     env: &mut TestEnvironment,
     owner: AztecAddress,
 ) -> AztecAddress {

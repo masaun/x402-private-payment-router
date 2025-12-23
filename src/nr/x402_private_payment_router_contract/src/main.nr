@@ -1,7 +1,7 @@
 use aztec::macros::aztec;
 
 pub mod types;
-//pub mod test; // [NOTE]: Temporarily commented out to avoid compilation error.
+pub mod test;
 
 #[aztec]
 pub contract X402PrivatePaymentRouter {
