@@ -69,6 +69,9 @@ pub unconstrained fn call_deposit_function_of_private_vault_contract() -> (TestE
     let private_vault = PrivateVault::at(private_vault_contract_address);
     let token = Token::at(token_contract_address);
 
+    // -----------------------------------------------------------------------------------//
+    //        Transfer a given amount (transfer_amount) from the admin to the payer       //
+    // -----------------------------------------------------------------------------------//
     // @dev - Create the "transferFrom" call interface
     let transfer_amount = (1000 as u128);
     let transfer_private_from_call_interface = token.transfer_private_to_private(admin, payer, transfer_amount, 1);
