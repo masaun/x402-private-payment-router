@@ -134,7 +134,7 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     );
 
     // @dev - Call the X402PrivatePaymentRouter#deposit() -> now payer has tokens to deposit and authwit is set for the internal token transfer
-    env.call_private(payer, x402_private_payment_router.deposit(token_contract_address, payer, amount_to_be_deposited));
+    env.call_private(payer, x402_private_payment_router.deposit(private_vault_contract_address, token_contract_address, amount_to_be_deposited));
 
     // @dev - Get the token balances after the deposit
     let balance_of_x402_private_payment_router = token_utils::get_private_balance(env, token_contract_address, x402_private_payment_router_contract_address);

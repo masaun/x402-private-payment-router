@@ -29,7 +29,7 @@ pub unconstrained fn deploy_x402_private_payment_router_contract(
 ) -> AztecAddress {
     let initializer_call_interface = X402PrivatePaymentRouter::interface().constructor(owner);
     let contract_address =
-        env.deploy("X402PrivatePaymentRouter").with_public_initializer(owner, initializer_call_interface);
+        env.deploy("@x402_private_payment_router_contract/X402PrivatePaymentRouter").with_public_initializer(owner, initializer_call_interface);
 
     contract_address
 }
