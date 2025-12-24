@@ -18,13 +18,10 @@ use aztec::{
 use uint_note::uint_note::{UintNote};
 
 // @dev - Import the PrivateVault contract (private_vault_contract/src/main.nr)
-use private_vault::PrivateVault;
-use private_vault::test::utils as private_vault_utils;
+use private_vault::{PrivateVault, test::utils as private_vault_utils};
 
 // @dev - Import the Token contract (token_contract/src/main.nr)
-use token::Token;
-use token::test::utils as token_utils;
-use token::test::utils::mint_amount;
+use token::{Token, test::utils as token_utils, test::utils::mint_amount};
 
 
 /**
