@@ -49,7 +49,7 @@ pub unconstrained fn deploy_private_vault_contract(
 ) -> AztecAddress {
     let initializer_call_interface = PrivateVault::interface().constructor(owner);
     let contract_address =
-        env.deploy("PrivateVault").with_public_initializer(owner, initializer_call_interface);
+        env.deploy("@private_vault_contract/PrivateVault").with_public_initializer(owner, initializer_call_interface);
 
     contract_address
 }
