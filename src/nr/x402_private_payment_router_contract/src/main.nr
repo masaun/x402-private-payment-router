@@ -52,7 +52,7 @@ pub contract X402PrivatePaymentRouter {
     use private_vault::PrivateVault;
 
     // @dev - Import the Token contract (token_contract/src/main.nr)
-    use token::Token;
+    use token::{Token};
 
     // @dev - Import the Note library
     use uint_note::uint_note::{UintNote, PartialUintNote};
@@ -179,14 +179,14 @@ pub contract X402PrivatePaymentRouter {
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
 
-        // @dev - Transfer a given amount of a given token from a payer's wallet to this contract (or, the Vault contract). 
-        Token::at(token_contract_address)
-            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, payer, amount, 0)
-            .call(&mut context);
-
         // @dev - Withdraw a given amount of a given token from the PrivateVault contract to this contract.
         private_vault
             .withdraw(token_contract_address, X402_PRIVATE_PAYMENT_ROUTER, amount)
+            .call(&mut context);
+
+        // @dev - Transfer a given amount of a given token from this X402PrivatePaymentRouter contract to a given payer's wallet. 
+        Token::at(token_contract_address)
+            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, payer, amount, 0)
             .call(&mut context);
     }
 

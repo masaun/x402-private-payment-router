@@ -3,7 +3,7 @@ members = [
     "src/nr/x402_private_payment_router_contract",
     #"src/nr/x402_private_payment_router_contract/src/test/x402_private_payment_router_test",
     "src/nr/private_vault_contract",
-    "src/nr/token_contract"
+    #"src/nr/token_contract"
 ]
 
 [benchmark]
