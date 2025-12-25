@@ -41,15 +41,15 @@ unconstrained fn withdraw_success() {
     // @dev - Call the X402PrivatePaymentRouter#deposit() first to deposit a given amount of the Token into the X402PrivatePaymentRouter contract
     let (
         env, 
+        token_contract_address, 
         x402_private_payment_router_contract_address,
         private_vault_contract_address, 
-        token_contract_address, 
         admin, 
         payer
     ) = call_deposit_function_of_x402_private_payment_router_contract();
 
     // @dev - Call the X402PrivatePaymentRouter#withdraw() to withdraw a given amount of the Token from the X402PrivatePaymentRouter contract
-    call_withdraw_function_of_x402_private_payment_router_contract(env, x402_private_payment_router_contract_address, private_vault_contract_address, token_contract_address, payer);
+    call_withdraw_function_of_x402_private_payment_router_contract(env, token_contract_address, x402_private_payment_router_contract_address, private_vault_contract_address, payer);
 }
 
 
@@ -151,7 +151,7 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     );
 
     // @dev - Call the X402PrivatePaymentRouter#deposit() -> now payer has tokens to deposit and authwits are set for both internal token transfers
-    env.call_private(payer, x402_private_payment_router.deposit(private_vault_contract_address, token_contract_address, amount_to_be_deposited));
+    env.call_private(payer, x402_private_payment_router.deposit(token_contract_address, private_vault_contract_address, amount_to_be_deposited));
 
     // @dev - Get the token balances after the deposit
     let balance_of_x402_private_payment_router = token_utils::get_private_balance(env, token_contract_address, x402_private_payment_router_contract_address);
@@ -180,7 +180,7 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     let test_message = "-------------- The test of the X402PrivatePaymentRouter#deposit() has been done!!! --------------";
     debug_log(test_message);
 
-    (env, x402_private_payment_router_contract_address, private_vault_contract_address, token_contract_address, admin, payer)
+    (env, token_contract_address, x402_private_payment_router_contract_address, private_vault_contract_address, admin, payer)
 
 
     //----------------------------//
@@ -206,9 +206,9 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
  */
 pub unconstrained fn call_withdraw_function_of_x402_private_payment_router_contract(
     env: TestEnvironment,
+    token_contract_address: AztecAddress,
     x402_private_payment_router_contract_address: AztecAddress,
     private_vault_contract_address: AztecAddress,
-    token_contract_address: AztecAddress,
     payer: AztecAddress,
 ) {
     // [TODO]:
