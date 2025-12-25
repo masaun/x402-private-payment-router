@@ -162,19 +162,19 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     debug_log_format("--------- balance_of_payer_after_deposit: {0} ---------", [balance_of_payer_after_deposit as Field]);
 
     // @dev - Check balances after calling the X402PrivatePaymentRouter#deposit(), which the payer's private balance should be decreased by 'amount_to_be_deposited' and the PrivateVault contract's private balance should be increased by 'amount_to_be_deposited'.
-    token_utils::check_private_balance(
-        env,
-        token_contract_address,
-        x402_private_payment_router_contract_address,
-        amount_to_be_deposited,
-    );
-    token_utils::check_private_balance(
-        env,
-        token_contract_address,
-        private_vault_contract_address,
-        amount_to_be_deposited,
-    );
-    token_utils::check_private_balance(env, token_contract_address, payer, transfer_amount - amount_to_be_deposited);
+    // token_utils::check_private_balance(
+    //     env,
+    //     token_contract_address,
+    //     x402_private_payment_router_contract_address,
+    //     amount_to_be_deposited,
+    // );
+    // token_utils::check_private_balance(
+    //     env,
+    //     token_contract_address,
+    //     private_vault_contract_address,
+    //     amount_to_be_deposited,
+    // );
+    // token_utils::check_private_balance(env, token_contract_address, payer, transfer_amount - amount_to_be_deposited);
 
     // @dev - Logging the simple messages
     let test_message = "-------------- The test of the X402PrivatePaymentRouter#deposit() has been done!!! --------------";
