@@ -3,33 +3,16 @@ use aztec::{
     protocol_types::address::AztecAddress, test::helpers::test_environment::TestEnvironment,
 };
 
-// @dev - Import the PrivateVault contract for unified deployment
-use private_vault::PrivateVault;
+// @dev - Import the PrivateVault contract (private_vault_contract/src/main.nr)
+use private_vault::{PrivateVault, test::utils as private_vault_utils};
+//use private_vault::PrivateVault;
 
-// @dev - Import the Token contract for unified deployment
-use token::Token;
+// @dev - Import the Token contract (token_contract/src/main.nr)
+use token::{Token, test::utils as token_utils};
+//use token::Token;
 
 pub global mint_amount: u128 = 10_000 as u128;
 
-pub unconstrained fn setup_contract(
-    with_account_contracts: bool,
-) -> (&mut TestEnvironment, AztecAddress, AztecAddress, AztecAddress) {
-    // Setup env, generate keys
-    let mut env = TestEnvironment::new();
-    let (owner, payer) = if with_account_contracts {
-        let owner = env.create_contract_account();
-        let payer = env.create_contract_account();
-        (owner, payer)
-    } else {
-        let owner = env.create_light_account();
-        let payer = env.create_light_account();
-        (owner, payer)
-    };
-
-    let contract_address = deploy_x402_private_payment_router_contract(&mut env, owner);
-
-    (&mut env, contract_address, owner, payer)
-}
 
 /// @notice - Unified setup function that deploys ALL THREE contracts (Token, PrivateVault, X402PrivatePaymentRouter)
 /// in the SAME TestEnvironment. This is critical for nested cross-contract calls to work in TXE.
@@ -41,19 +24,20 @@ pub unconstrained fn setup_all_contracts(
     with_account_contracts: bool,
 ) -> (TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
     // Setup env, generate keys - ALL contracts will share this environment
-    let mut env = TestEnvironment::new();
-    let (admin, payer) = if with_account_contracts {
-        let admin = env.create_contract_account();
-        let payer = env.create_contract_account();
-        (admin, payer)
-    } else {
-        let admin = env.create_light_account();
-        let payer = env.create_light_account();
-        (admin, payer)
-    };
+    // let mut env = TestEnvironment::new();
+    // let (admin, payer) = if with_account_contracts {
+    //     let admin = env.create_contract_account();
+    //     let payer = env.create_contract_account();
+    //     (admin, payer)
+    // } else {
+    //     let admin = env.create_light_account();
+    //     let payer = env.create_light_account();
+    //     (admin, payer)
+    // };
 
-    // 1. Deploy Token contract FIRST with initial supply to admin
-    let token_contract_address = deploy_token_with_initial_supply(&mut env, admin, mint_amount, admin);
+    // 1. Deploy Token contract FIRST with minting token (without minter) + Using the env (TestEnvironment) in the subsequent contract deployments
+    let (mut env, token_contract_address, admin, payer) = token_utils::setup_and_mint_to_private_without_minter(true);
+    //let token_contract_address = deploy_token_with_initial_supply(&mut env, admin, mint_amount, admin);
 
     // 2. Transfer public tokens to private for admin
     env.call_private(
@@ -93,25 +77,25 @@ pub unconstrained fn deploy_private_vault_contract(
     contract_address
 }
 
-pub unconstrained fn deploy_token_with_initial_supply(
-    env: &mut TestEnvironment,
-    owner: AztecAddress,
-    initial_supply: u128,
-    to: AztecAddress,
-) -> AztecAddress {
-    // Deploy token contract
-    let initializer_call_interface = Token::interface().constructor_with_initial_supply(
-        "TestToken0000000000000000000000",
-        "TT00000000000000000000000000000",
-        18,
-        initial_supply,
-        to,
-        AztecAddress::zero(),
-    );
-    let token_contract_address = env.deploy("@token_contract/Token").with_public_initializer(
-        owner,
-        initializer_call_interface,
-    );
+// pub unconstrained fn deploy_token_with_initial_supply(
+//     env: &mut TestEnvironment,
+//     owner: AztecAddress,
+//     initial_supply: u128,
+//     to: AztecAddress,
+// ) -> AztecAddress {
+//     // Deploy token contract
+//     let initializer_call_interface = Token::interface().constructor_with_initial_supply(
+//         "TestToken0000000000000000000000",
+//         "TT00000000000000000000000000000",
+//         18,
+//         initial_supply,
+//         to,
+//         AztecAddress::zero(),
+//     );
+//     let token_contract_address = env.deploy("@token_contract/Token").with_public_initializer(
+//         owner,
+//         initializer_call_interface,
+//     );
 
-    token_contract_address
-}
+//     token_contract_address
+// }
