@@ -61,8 +61,8 @@ pub unconstrained fn setup_all_contracts(
         Token::at(token_contract_address).transfer_public_to_private(admin, admin, mint_amount, 0),
     );
 
-    // 3. Deploy PrivateVault contract
-    let private_vault_contract_address = deploy_private_vault_contract(&mut env, admin);
+    // 3. Deploy PrivateVault contract (NOTE: The PrivateVault must use the same Token contract address with the TestEnvironment of the X402PrivatePaymentRouter contract)
+    let private_vault_contract_address = deploy_private_vault_contract(&mut env, admin, token_contract_address);
 
     // 4. Deploy X402PrivatePaymentRouter contract
     let x402_contract_address = deploy_x402_private_payment_router_contract(&mut env, admin);
@@ -84,8 +84,9 @@ pub unconstrained fn deploy_x402_private_payment_router_contract(
 pub unconstrained fn deploy_private_vault_contract(
     env: &mut TestEnvironment,
     owner: AztecAddress,
+    token_contract_address: AztecAddress,
 ) -> AztecAddress {
-    let initializer_call_interface = PrivateVault::interface().constructor(owner);
+    let initializer_call_interface = PrivateVault::interface().constructor(owner, token_contract_address);
     let contract_address =
         env.deploy("@private_vault_contract/PrivateVault").with_public_initializer(owner, initializer_call_interface);
 

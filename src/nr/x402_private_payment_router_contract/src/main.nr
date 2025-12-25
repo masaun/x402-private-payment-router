@@ -113,8 +113,8 @@ pub contract X402PrivatePaymentRouter {
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
     fn deposit(
-        private_vault_contract_address: AztecAddress,
         token_contract_address: AztecAddress,
+        private_vault_contract_address: AztecAddress,
         amount: u128,
     ) {
         // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
@@ -150,8 +150,8 @@ pub contract X402PrivatePaymentRouter {
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
     #[external("private")]
     fn withdraw(
-        private_vault_contract_address: AztecAddress,
         token_contract_address: AztecAddress,
+        private_vault_contract_address: AztecAddress,
         from: AztecAddress,
         amount: u128,
     ) {
@@ -193,8 +193,8 @@ pub contract X402PrivatePaymentRouter {
     // @dev - Pay for a fees with the deposited-wallet balance (storage.walllets.at(payer).balance)
     #[external("private")]
     fn authorize_payment(
-        private_vault_contract_address: AztecAddress,
         token_contract_address: AztecAddress,
+        private_vault_contract_address: AztecAddress,
         payee: AztecAddress,
         payment_hash: Field,
         token: AztecAddress,

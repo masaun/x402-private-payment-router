@@ -69,6 +69,7 @@ pub contract PrivateVault {
     #[storage]
     struct Storage<Context> {
         admin: PublicImmutable<AztecAddress, Context>,
+        token_contract_address: PublicImmutable<AztecAddress, Context>,
         vault_wallets: Map<AztecAddress, VaultWalletSet<Context>, Context>,  // Private wallets: payer => balances
     }
 
@@ -79,8 +80,9 @@ pub contract PrivateVault {
     /// @param owner The address of the owner
     #[external("public")]
     #[initializer]
-    fn constructor(_admin: AztecAddress) {
+    fn constructor(_admin: AztecAddress, token_contract_address: AztecAddress) {
         storage.admin.initialize(_admin);
+        storage.token_contract_address.initialize(token_contract_address);
     }
 
     /*******************************
@@ -96,12 +98,15 @@ pub contract PrivateVault {
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
     fn deposit(
-        token: AztecAddress,
+        token_contract_address: AztecAddress,
         from: AztecAddress,
         amount: u128,
     ) {
         // @dev - Create the contract instance of the PrivateVault contract
         let private_vault = PrivateVault::at(context.this_address());
+
+        // @dev - Create the contract instance of the Token contract
+        let token = Token::at(storage.token_contract_address.read());
 
         // @dev - Store the PrivateVault contract address into a variable
         let PRIVATE_VAULT = context.this_address();
@@ -110,20 +115,21 @@ pub contract PrivateVault {
         _increase_vault_wallet_balance(storage.vault_wallets, PRIVATE_VAULT, amount);
 
         // @dev - Transfer a given amount of a given token from a payer's wallet to this contract (or, the Vault contract). 
-        Token::at(token)
-            .transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
-            .call(&mut context);
+        token.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0).call(&mut context);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
     #[external("private")]
     fn withdraw(
-        token: AztecAddress,
+        token_contract_address: AztecAddress,
         to: AztecAddress,
         amount: u128,
     ) {
         // @dev - Create the contract instance of the PrivateVault contract
         let private_vault = PrivateVault::at(context.this_address());
+
+        // @dev - Create the contract instance of the Token contract
+        let token = Token::at(storage.token_contract_address.read());
 
         // @dev - Store the PrivateVault contract address into a variable
         let PRIVATE_VAULT = context.this_address();
@@ -138,9 +144,7 @@ pub contract PrivateVault {
         );
 
         // @dev - Transfer a given amount of a given token from this vault contract to a payer's wallet. 
-        Token::at(token)
-            .transfer_private_to_private(PRIVATE_VAULT, to, amount, 0)
-            .call(&mut context);
+        token.transfer_private_to_private(PRIVATE_VAULT, to, amount, 0).call(&mut context);
     }
 
 
