@@ -63,7 +63,7 @@ pub unconstrained fn call_deposit_function_of_private_vault_contract() -> (TestE
     // @dev - Setup (Deploy) the smart contracts and get necessary addresses    
     //let (env, private_vault_contract_address, token_contract_address, admin, payer) = utils::setup_contract(false);
     let (mut env, token_contract_address, admin, payer) = utils::setup_and_mint_to_private_without_minter(true);
-    let private_vault_contract_address = utils::deploy_private_vault_contract(&mut env, admin);
+    let private_vault_contract_address = utils::deploy_private_vault_contract(&mut env, admin, token_contract_address);
 
     // @dev - Create the contract instance of both contracts the PrivateVault and the Token.
     let private_vault = PrivateVault::at(private_vault_contract_address);

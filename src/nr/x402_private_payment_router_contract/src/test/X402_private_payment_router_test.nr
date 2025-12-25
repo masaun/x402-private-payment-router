@@ -64,7 +64,7 @@ unconstrained fn withdraw_success() {
 pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contract() -> (TestEnvironment, AztecAddress, AztecAddress, AztecAddress, AztecAddress, AztecAddress) {
     let initial_message = "-------------- The initial line of the call_deposit_function_of_x402_private_payment_router_contract() to call the X402PrivatePaymentRouter#deposit()!!! --------------";
     debug_log(initial_message);
-
+    
     // @dev - Setup (Deploy) ALL smart contracts in the SAME TestEnvironment
     // @dev - This is CRITICAL for nested cross-contract calls (X402 -> PrivateVault -> Token) to work in TXE.
     // @dev - Previously, we used token::test::utils::setup_and_mint_to_private_without_minter() which created its own
@@ -132,7 +132,7 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     // @dev   2. PrivateVault.deposit(token, X402_PRIVATE_PAYMENT_ROUTER, amount) which internally calls:
     // @dev      Token.transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PRIVATE_VAULT, amount, 0)
     // @dev
-    // @dev - For the first transfer (payer -> X402), we need authwit from payer authorizing X402 to call Token.transfer
+    // @dev - For the first transfer (payer -> X402PrivatePaymentRouter), we need authwit from payer authorizing X402PrivatePaymentRouter to call Token.transfer
     let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, x402_private_payment_router_contract_address, amount_to_be_deposited, 0);
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         env,
@@ -141,14 +141,14 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
         transfer_payer_to_x402_call_interface,
     );
 
-    // @dev - For the second transfer (X402 -> PrivateVault inside PrivateVault.deposit()), we need authwit from X402 authorizing PrivateVault to call Token.transfer
-    let transfer_x402_to_vault_call_interface = token.transfer_private_to_private(x402_private_payment_router_contract_address, private_vault_contract_address, amount_to_be_deposited, 0);
-    authwit_cheatcodes::add_private_authwit_from_call_interface(
-        env,
-        x402_private_payment_router_contract_address,
-        private_vault_contract_address,
-        transfer_x402_to_vault_call_interface,
-    );
+    // // @dev - For the second transfer (X402PrivatePaymentRouter -> PrivateVault inside PrivateVault.deposit()), we need authwit from X402 authorizing PrivateVault to call Token.transfer
+    // let transfer_x402_to_vault_call_interface = token.transfer_private_to_private(x402_private_payment_router_contract_address, private_vault_contract_address, amount_to_be_deposited, 0);
+    // authwit_cheatcodes::add_private_authwit_from_call_interface(
+    //     env,
+    //     x402_private_payment_router_contract_address,
+    //     private_vault_contract_address,
+    //     transfer_x402_to_vault_call_interface,
+    // );
 
     // @dev - Call the X402PrivatePaymentRouter#deposit() -> now payer has tokens to deposit and authwits are set for both internal token transfers
     env.call_private(payer, x402_private_payment_router.deposit(token_contract_address, private_vault_contract_address, amount_to_be_deposited));

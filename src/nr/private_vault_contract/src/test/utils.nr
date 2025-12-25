@@ -36,7 +36,7 @@ pub unconstrained fn setup_contract(
     //let (env, token_contract_address, owner, recipient) = setup_and_mint_to_private_without_minter(true);
 
     // @dev - Deploy the PrivateVault contract
-    let private_vault_contract_address = deploy_private_vault_contract(&mut env, owner);
+    let private_vault_contract_address = deploy_private_vault_contract(&mut env, owner, token_contract_address);
     
     // @dev - Return values
     (env, private_vault_contract_address, token_contract_address, owner, user)
@@ -46,8 +46,9 @@ pub unconstrained fn setup_contract(
 pub unconstrained fn deploy_private_vault_contract(
     env: &mut TestEnvironment,
     owner: AztecAddress,
+    token_contract_address: AztecAddress,
 ) -> AztecAddress {
-    let initializer_call_interface = PrivateVault::interface().constructor(owner);
+    let initializer_call_interface = PrivateVault::interface().constructor(owner, token_contract_address);
     let contract_address =
         env.deploy("@private_vault_contract/PrivateVault").with_public_initializer(owner, initializer_call_interface);
 
