@@ -40,10 +40,10 @@ pub unconstrained fn setup_all_contracts(
     //let token_contract_address = deploy_token_with_initial_supply(&mut env, admin, mint_amount, admin);
 
     // 2. Transfer public tokens to private for admin
-    env.call_private(
-        admin,
-        Token::at(token_contract_address).transfer_public_to_private(admin, admin, mint_amount, 0),
-    );
+    // env.call_private(
+    //     admin,
+    //     Token::at(token_contract_address).transfer_public_to_private(admin, admin, mint_amount, 0),
+    // );
 
     // 3. Deploy PrivateVault contract (NOTE: The PrivateVault must use the same Token contract address with the TestEnvironment of the X402PrivatePaymentRouter contract)
     let private_vault_contract_address = deploy_private_vault_contract(&mut env, admin, token_contract_address);
