@@ -77,7 +77,7 @@ pub unconstrained fn deploy_token_contract_with_initial_supply(
 
     env.call_private(
         owner,
-        Token::at(token_contract_address).transfer_public_to_private(owner, owner, mint_amount, 0),
+        Token::at(token_contract_address).transfer_private_to_private(owner, owner, mint_amount, 0),
     );
 
     token_contract_address

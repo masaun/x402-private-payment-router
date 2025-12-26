@@ -88,12 +88,6 @@ pub contract PrivateVault {
     /*******************************
     *   @notice - Main functions   *
     *******************************/
-    /// @dev Retrieves the owner of the contract
-    /// @return The owner of the contract
-    #[external("public")]
-    fn get_admin() -> AztecAddress {
-        storage.admin.read()
-    }
 
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
@@ -145,6 +139,14 @@ pub contract PrivateVault {
 
         // @dev - Transfer a given amount of a given token from this vault contract to a payer's wallet. 
         token.transfer_private_to_private(PRIVATE_VAULT, to, amount, 0).call(&mut context);
+    }
+
+    /// @dev Retrieves the owner of the contract
+    /// @return The owner of the contract
+    #[external("public")]
+    #[view]
+    fn get_admin() -> AztecAddress {
+        storage.admin.read()
     }
 
 

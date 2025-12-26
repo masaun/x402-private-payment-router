@@ -103,12 +103,6 @@ pub contract X402PrivatePaymentRouter {
     /*******************************
     *   @notice - Main functions   *
     *******************************/
-    /// @dev Retrieves the owner of the contract
-    /// @return The owner of the contract
-    #[external("public")]
-    fn get_admin() -> AztecAddress {
-        storage.admin.read()
-    }
 
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
@@ -123,11 +117,17 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
         let private_vault = PrivateVault::at(private_vault_contract_address);
 
+        // @dev - Create the contract instance of the Token contract
+        let token = Token::at(token_contract_address);
+
         // @dev - Store the x402PrivatePaymentRouter contract address into a variable
         let X402_PRIVATE_PAYMENT_ROUTER = context.this_address();
 
         // @dev - Store the PrivateVault contract address into a variable
         let PRIVATE_VAULT = private_vault_contract_address;
+
+        // @dev - Store the Token contract address into a variable
+        let TOKEN = token_contract_address;
 
         // @dev - Store the payer address into the payer variables
         let payer = context.msg_sender().unwrap();
@@ -136,15 +136,18 @@ pub contract X402PrivatePaymentRouter {
         _increase_wallet_balance(storage.wallets, payer, amount);
 
         // @dev - Transfer a given amount of a given token from a payer's wallet to this X402PrivatePaymentRouter contract
-        Token::at(token_contract_address)
+        token
             .transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
             .call(&mut context);
 
         // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
         // @dev - [Error]: Currently, the error of the selector mismatch has been occurred here.
         private_vault
-            .deposit(token_contract_address, X402_PRIVATE_PAYMENT_ROUTER, amount)
+            .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
             .call(&mut context);
+
+        // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
+        // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
@@ -161,11 +164,17 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
         let private_vault = PrivateVault::at(private_vault_contract_address);
 
+        // @dev - Create the contract instance of the Token contract
+        let token = Token::at(token_contract_address);
+
         // @dev - Store the x402PrivatePaymentRouter contract address into a variable
         let X402_PRIVATE_PAYMENT_ROUTER = context.this_address();
 
         // @dev - Store the PrivateVault contract address into a variable
         let PRIVATE_VAULT = private_vault_contract_address;
+
+        // @dev - Store the Token contract address into a variable
+        let TOKEN = token_contract_address;
 
         // @dev - Store the payer address into the payer variables
         let payer = context.msg_sender().unwrap();
@@ -181,11 +190,11 @@ pub contract X402PrivatePaymentRouter {
 
         // @dev - Withdraw a given amount of a given token from the PrivateVault contract to this contract.
         private_vault
-            .withdraw(token_contract_address, X402_PRIVATE_PAYMENT_ROUTER, amount)
+            .withdraw(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
             .call(&mut context);
 
         // @dev - Transfer a given amount of a given token from this X402PrivatePaymentRouter contract to a given payer's wallet. 
-        Token::at(token_contract_address)
+  token
             .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, payer, amount, 0)
             .call(&mut context);
     }
@@ -204,11 +213,20 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Create the contract instance of the X402PrivatePayment contract
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
+        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
+        let private_vault = PrivateVault::at(private_vault_contract_address);
+
+        // @dev - Create the contract instance of the Token contract
+        let token = Token::at(token_contract_address);
+
         // @dev - Store the x402PrivatePaymentRouter contract address into a variable
         let X402_PRIVATE_PAYMENT_ROUTER = context.this_address();
 
-        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
-        let private_vault = PrivateVault::at(private_vault_contract_address);
+        // @dev - Store the PrivateVault contract address into a variable
+        let PRIVATE_VAULT = private_vault_contract_address;
+
+        // @dev - Store the Token contract address into a variable
+        let TOKEN = token_contract_address;
 
         // @dev - Create the payer instance, which the msg_sender is stored.
         let payer: AztecAddress = context.msg_sender().unwrap();
@@ -227,11 +245,11 @@ pub contract X402PrivatePaymentRouter {
 
         // @dev - At the first step, withdrawing a given amount of a given token from the PrivateVault contract to this X402PrivatePaymentRouter contract.
         private_vault
-            .withdraw(token_contract_address, X402_PRIVATE_PAYMENT_ROUTER, amount)
+            .withdraw(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
             .call(&mut context);
 
         // @dev - At the second step, transfering a given amount of a given token from this X402PrivatePaymentRouter contract to a given payee's wallet. 
-        Token::at(token)
+        token
             .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, payee, amount, 0)
             .call(&mut context);
 
@@ -253,6 +271,14 @@ pub contract X402PrivatePaymentRouter {
     fn increment_payment_id() {
         let current_payment_id: u128 = storage.payment_id.read();
         storage.payment_id.write(current_payment_id + 1)
+    }
+
+    /// @dev Retrieves the owner of the contract
+    /// @return The owner of the contract
+    #[external("public")]
+    #[view]
+    fn get_admin() -> AztecAddress {
+        storage.admin.read()
     }
 
     /// @dev Retrieves the current payment ID
