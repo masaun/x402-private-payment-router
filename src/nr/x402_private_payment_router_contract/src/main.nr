@@ -149,14 +149,14 @@ pub contract X402PrivatePaymentRouter {
         // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
         // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
         // @dev - [Result]: The following case, which is directly transferring tokens from the payer to the PrivateVault contract, was successful.
-        token
-            .transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0)
-            .call(&mut context);
-        
-         // @dev - [Result]: The next TODO 
-        // private_vault
-        //     .deposit(TOKEN, payer, amount)
+        // token
+        //     .transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0)
         //     .call(&mut context);
+        
+        // @dev - [Result]: The next TODO 
+        private_vault
+            .deposit(TOKEN, payer, amount)
+            .call(&mut context);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
