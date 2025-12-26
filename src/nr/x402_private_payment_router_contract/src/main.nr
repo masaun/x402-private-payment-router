@@ -136,18 +136,27 @@ pub contract X402PrivatePaymentRouter {
         _increase_wallet_balance(storage.wallets, payer, amount);
 
         // @dev - Transfer a given amount of a given token from a payer's wallet to this X402PrivatePaymentRouter contract
-        token
-            .transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
-            .call(&mut context);
+        // token
+        //     .transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
+        //     .call(&mut context);
 
         // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
         // @dev - [Error]: Currently, the error of the selector mismatch has been occurred here.
-        private_vault
-            .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
-            .call(&mut context);
+        // private_vault
+        //     .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
+        //     .call(&mut context);
 
         // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
         // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
+        // @dev - [Result]: The following case, which is directly transferring tokens from the payer to the PrivateVault contract, was successful.
+        token
+            .transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0)
+            .call(&mut context);
+        
+         // @dev - [Result]: The next TODO 
+        // private_vault
+        //     .deposit(TOKEN, payer, amount)
+        //     .call(&mut context);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
