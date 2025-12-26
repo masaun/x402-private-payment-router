@@ -133,13 +133,13 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     // @dev      Token.transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PRIVATE_VAULT, amount, 0)
     // @dev
     // @dev - For the first transfer (payer -> X402PrivatePaymentRouter), we need authwit from payer authorizing X402PrivatePaymentRouter to call Token.transfer
-    // let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, x402_private_payment_router_contract_address, amount_to_be_deposited, 0);
-    // authwit_cheatcodes::add_private_authwit_from_call_interface(
-    //     env,
-    //     payer,
-    //     x402_private_payment_router_contract_address,
-    //     transfer_payer_to_x402_call_interface,
-    // );
+    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, x402_private_payment_router_contract_address, amount_to_be_deposited, 0);
+    authwit_cheatcodes::add_private_authwit_from_call_interface(
+        env,
+        payer,
+        x402_private_payment_router_contract_address,
+        transfer_payer_to_x402_call_interface,
+    );
 
     // // @dev - For the second transfer (X402PrivatePaymentRouter -> PrivateVault inside PrivateVault.deposit()), we need authwit from X402 authorizing PrivateVault to call Token.transfer
     // let transfer_x402_to_vault_call_interface = token.transfer_private_to_private(x402_private_payment_router_contract_address, private_vault_contract_address, amount_to_be_deposited, 0);
@@ -150,16 +150,16 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     //     transfer_x402_to_vault_call_interface,
     // );
 
-    // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
-    // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
-    // @dev - [Result]: The following case, which is directly transferring tokens from the payer to the PrivateVault contract, was successful.
-    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, private_vault_contract_address, amount_to_be_deposited, 0);
-    authwit_cheatcodes::add_private_authwit_from_call_interface(
-        env,
-        payer,
-        x402_private_payment_router_contract_address,
-        transfer_payer_to_x402_call_interface,
-    );
+    // // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
+    // // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
+    // // @dev - [Result]: The following case, which is directly transferring tokens from the payer to the PrivateVault contract, was successful.
+    // let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, private_vault_contract_address, amount_to_be_deposited, 0);
+    // authwit_cheatcodes::add_private_authwit_from_call_interface(
+    //     env,
+    //     payer,
+    //     x402_private_payment_router_contract_address,
+    //     transfer_payer_to_x402_call_interface,
+    // );
 
     // @dev - Call the X402PrivatePaymentRouter#deposit() -> now payer has tokens to deposit and authwits are set for both internal token transfers
     env.call_private(payer, x402_private_payment_router.deposit(token_contract_address, private_vault_contract_address, amount_to_be_deposited));
