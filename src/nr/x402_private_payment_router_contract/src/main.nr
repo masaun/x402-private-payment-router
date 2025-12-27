@@ -142,9 +142,9 @@ pub contract X402PrivatePaymentRouter {
 
         // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
         // @dev - [Error]: Currently, the error of the selector mismatch has been occurred here.
-        // private_vault
-        //     .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
-        //     .call(&mut context);
+        private_vault
+            .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
+            .call(&mut context);
 
         // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
         // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
