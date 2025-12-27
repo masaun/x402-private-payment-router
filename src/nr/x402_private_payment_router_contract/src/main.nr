@@ -158,11 +158,11 @@ pub contract X402PrivatePaymentRouter {
         //     .deposit(TOKEN, payer, amount)
         //     .call(&mut context);
 
-        /// @dev - Instead of invoking the PrivateVault#deposit() function, directly transfer the tokens from this X402PrivatePaymentRouter contract to the PrivateVault contract.
-        /// @dev - [Result]: Successful
-        token
-            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PRIVATE_VAULT, amount, 0)
-            .call(&mut context);
+        // /// @dev - Instead of invoking the PrivateVault#deposit() function, directly transfer the tokens from this X402PrivatePaymentRouter contract to the PrivateVault contract.
+        // /// @dev - [Result]: Successful
+        // token
+        //     .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PRIVATE_VAULT, amount, 0)
+        //     .call(&mut context);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
@@ -214,9 +214,9 @@ pub contract X402PrivatePaymentRouter {
             .call(&mut context);
     }
 
-    // @dev - Pay for a fees with the deposited-wallet balance (storage.walllets.at(payer).balance)
+    // @dev - Settle a private payment from a payer to a payee
     #[external("private")]
-    fn authorize_payment(
+    fn settle_payment(
         token_contract_address: AztecAddress,
         private_vault_contract_address: AztecAddress,
         payee: AztecAddress,
