@@ -140,11 +140,19 @@ pub contract X402PrivatePaymentRouter {
             .transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
             .call(&mut context);
 
-        // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
-        // @dev - [Error]: Currently, the error of the selector mismatch has been occurred here.
-        private_vault
-            .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
-            .call(&mut context);
+        // // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
+        // // @dev - [Error]: Currently, the error of the selector mismatch has been occurred here.
+        // // @dev - [TODO]: Create a interal function outside of this function to call the Private#deposit(). And then, calling the internal function here. 
+        // private_vault
+        //     .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
+        //     .call(&mut context);
+        _deposit_from_x402_private_payment_router_to_private_vault(
+            X402_PRIVATE_PAYMENT_ROUTER, 
+            PRIVATE_VAULT, 
+            TOKEN,
+            amount, 
+            &mut context
+        );
 
         // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
         // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
@@ -309,6 +317,7 @@ pub contract X402PrivatePaymentRouter {
     /*******************************************
     *   @notice - Contract Library functions   *
     ********************************************/
+
     /// @notice Updates the given storage pointer `wallets` to increase the (private) balance of `to` wallet by `amount`
     /// @param wallets - The storage pointer to the wallets, which includes the private balances
     /// @param to The address of the recipient
@@ -383,14 +392,35 @@ pub contract X402PrivatePaymentRouter {
         }
     }
 
+    // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
+    #[contract_library_method]
+    fn _deposit_from_x402_private_payment_router_to_private_vault(
+        x402_private_payment_router_contract_address: AztecAddress,
+        private_vault_contract_address: AztecAddress,
+        token_contract_address: AztecAddress,
+        amount: u128,
+        context: &mut PrivateContext
+    ) {
+        // @dev - Create the contract instance of the X402PrivatePayment contract
+        let x402_private_payment_router = X402PrivatePaymentRouter::at(x402_private_payment_router_contract_address);
 
+        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
+        let private_vault = PrivateVault::at(private_vault_contract_address);
 
-    /// @dev - Retrieves the wallet note for a given payer
-    /// @dev - [NOTE]: Basically, the return value of the private functions should be seen by anoone. Hence, "view" function should be defined for a private function.
-    // #[external("private")]
-    // #[view]
-    // //fn get_wallet_note(payer: AztecAddress) -> OuterNoteEmission<UintNote> {
-    // fn get_wallet_note(payer: AztecAddress) -> WalletNote {
-    //     storage.wallets.at(payer).get_note()
-    // }
+        // @dev - Create the contract instance of the Token contract
+        let token = Token::at(token_contract_address);
+
+        // @dev - Store the x402PrivatePaymentRouter contract address into a variable
+        let X402_PRIVATE_PAYMENT_ROUTER = context.this_address();
+
+        // @dev - Store the PrivateVault contract address into a variable
+        let PRIVATE_VAULT = private_vault_contract_address;
+
+        // @dev - Store the Token contract address into a variable
+        let TOKEN = token_contract_address;
+
+        private_vault
+            .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
+            .call(context);
+    }
 }
