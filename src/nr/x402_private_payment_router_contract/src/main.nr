@@ -135,42 +135,9 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Increase the private balance of the payer's wallet by the deposited amount.
         _increase_wallet_balance(storage.wallets, payer, amount);
 
-        // @dev - Transfer a given amount of a given token from a payer's wallet to this X402PrivatePaymentRouter contract
-        token
-            .transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
-            .call(&mut context);
-
-        // // @dev - Deposit a given amount of a given token from this X402PrivatePaymentRouter contract to the PrivateVault contract.
-        // // @dev - [Error]: Currently, the error of the selector mismatch has been occurred here.
-        // // @dev - [TODO]: Create a interal function outside of this function to call the Private#deposit(). And then, calling the internal function here. 
-        // private_vault
-        //     .deposit(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
-        //     .call(&mut context);
-        _deposit_from_x402_private_payment_router_to_private_vault(
-            X402_PRIVATE_PAYMENT_ROUTER, 
-            PRIVATE_VAULT, 
-            TOKEN,
-            amount, 
-            &mut context
-        );
-
-        // @dev - [TODO]: Comment out the 2 lines above. Then, implementing the logic for directly transferring the tokens from the payer to the PrivateVault contract (NOTE: This operator is the X402PrivatePaymentRouter contract on behalf of them).
-        // @dev - [TODO]: Or, calling the PrivateVault#deposit() with a payer address as a "from" parameter and the PrivateVault contract address as a "to" parameter.
-        // @dev - [Result]: The following case, which is directly transferring tokens from the payer to the PrivateVault contract, was successful.
-        // token
-        //     .transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0)
-        //     .call(&mut context);
-        
-        // @dev - [Result]: Failed
-        // private_vault
-        //     .deposit(TOKEN, payer, amount)
-        //     .call(&mut context);
-
-        // /// @dev - Instead of invoking the PrivateVault#deposit() function, directly transfer the tokens from this X402PrivatePaymentRouter contract to the PrivateVault contract.
-        // /// @dev - [Result]: Successful
-        // token
-        //     .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PRIVATE_VAULT, amount, 0)
-        //     .call(&mut context);
+        // @dev - Directly transfer a given amount of a given token from a payer's wallet to the PrivateVault contract.
+        // @dev - [NOTE]: Instead of internally calling the PrivateVault#deposit() inside the X402PrivatePaymentRouter#deposit(), we directly call the Token#transfer_private_to_private() inside the X402PrivatePaymentRouter#deposit() - This is because the notes created in a transaction aren't available to spend in the same transaction in Aztec Network. (This is only for a private function)
+        token.transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0).call(&mut context);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
