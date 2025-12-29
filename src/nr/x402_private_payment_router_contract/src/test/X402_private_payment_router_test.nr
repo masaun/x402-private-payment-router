@@ -213,6 +213,12 @@ pub unconstrained fn call_withdraw_function_of_x402_private_payment_router_contr
     let x402_private_payment_router = X402PrivatePaymentRouter::at(x402_private_payment_router_contract_address);
     let private_vault = PrivateVault::at(private_vault_contract_address);
 
+    // @dev - Get the token balances before the withdrawal
+    let balance_of_private_vault_before_withdrawal = token_utils::get_private_balance(env, token_contract_address, private_vault_contract_address);
+    let balance_of_payer_before_withdrawal = token_utils::get_private_balance(env, token_contract_address, payer);
+    debug_log_format("--------- balance_of_private_vault (before withdrawal): {0} ---------", [balance_of_private_vault_before_withdrawal as Field]);
+    debug_log_format("--------- balance_of_payer (before withdrawal): {0} ---------", [balance_of_payer_before_withdrawal as Field]);
+
     // ---------------------------------------------------------------------//
     //    [Time Travel]: Advance block                                      //
     // ---------------------------------------------------------------------//
