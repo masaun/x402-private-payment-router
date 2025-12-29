@@ -49,8 +49,21 @@ unconstrained fn withdraw_success() {
     ) = call_deposit_function_of_x402_private_payment_router_contract();
 
     // @dev - Call the X402PrivatePaymentRouter#withdraw() to withdraw a given amount of the Token from the X402PrivatePaymentRouter contract
-    call_withdraw_function_of_x402_private_payment_router_contract(env, token_contract_address, x402_private_payment_router_contract_address, private_vault_contract_address, payer);
+    call_withdraw_function_of_x402_private_payment_router_contract(
+        env, 
+        token_contract_address, 
+        x402_private_payment_router_contract_address, 
+        private_vault_contract_address, 
+        payer
+    );
 }
+
+// unconstrained fn authorized_payment_success() {
+//     // // @dev - Check whether a payment ID was properly incremented.
+//     // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
+//     // assert(payment_id == 1);
+//     // debug_log_format("--------- payment_id: {0} ---------", [payment_id as Field]);
+// }
 
 
 
@@ -167,29 +180,16 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     // );
     // token_utils::check_private_balance(env, token_contract_address, payer, transfer_amount - amount_to_be_deposited);
 
+    // @dev - Check whether a payment ID was not incremented. (The payment ID should be incremented after the authorized_payment() is called)
+    let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
+    assert(payment_id == 0);
+    debug_log_format("--------- payment_id: {0} ---------", [payment_id as Field]);
+
     // @dev - Logging the simple messages
     let test_message = "-------------- The test of the X402PrivatePaymentRouter#deposit() has been done!!! --------------";
     debug_log(test_message);
 
     (env, token_contract_address, x402_private_payment_router_contract_address, private_vault_contract_address, admin, payer)
-
-
-    //----------------------------//
-    //    Original Code           //
-    //----------------------------//
-
-    // let (env, contract_address, owner, payer) = utils::setup_contract(false);
-
-    // // @dev - Create the X402PrivatePaymentRouter contract instance.
-    // let x402_private_payment_router = X402PrivatePaymentRouter::at(contract_address);
-
-    // // @dev - A payer would deposit some amount.
-    // let deposited_amount: u128 = 1000;
-    // env.call_private(payer, x402_private_payment_router.deposit(deposited_amount));
-
-    // // @dev - Check whether a payment ID was properly incremented.
-    // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
-    // assert(payment_id == 1);
 }
 
 /**
