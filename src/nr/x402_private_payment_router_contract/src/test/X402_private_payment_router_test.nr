@@ -58,7 +58,7 @@ unconstrained fn withdraw_success() {
     );
 }
 
-// unconstrained fn authorized_payment_success() {
+// unconstrained fn settle_payment_success() {
 //     // // @dev - Check whether a payment ID was properly incremented.
 //     // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
 //     // assert(payment_id == 1);
@@ -202,25 +202,27 @@ pub unconstrained fn call_withdraw_function_of_x402_private_payment_router_contr
     private_vault_contract_address: AztecAddress,
     payer: AztecAddress,
 ) {
+    // @dev - Create the contract instance of both contracts the PrivateVault and the Token.
+    let token = Token::at(token_contract_address);
+    let x402_private_payment_router = X402PrivatePaymentRouter::at(x402_private_payment_router_contract_address);
+    let private_vault = PrivateVault::at(private_vault_contract_address);
 
-    // @dev - To directly transfer from a payer to the PrivateVault contract via the X402PrivatePaymentRouter#deposit(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
-    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, private_vault_contract_address, amount_to_be_deposited, 0);
+    // ---------------------------------------------------------------------//
+    //    Calling the withdraw() of the X402PrivatePaymentRouter contract    //
+    // ---------------------------------------------------------------------//
+    let amount_to_be_withdrawn = (500 as u128);
+
+    // @dev - To directly transfer from the PrivateVault contract to a given payer via the X402PrivatePaymentRouter#withdraw(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
+    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(x402_private_payment_router_contract_address, payer, amount_to_be_withdrawn, 0);
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         env,
-        payer,
+        private_vault_contract_address,
         x402_private_payment_router_contract_address,
         transfer_payer_to_x402_call_interface,
     );
 
-    // @dev - Call the X402PrivatePaymentRouter#deposit() -> now payer has tokens to deposit and authwits are set for both internal token transfers
-    env.call_private(payer, x402_private_payment_router.withdraw(token_contract_address, private_vault_contract_address, amount_to_be_deposited));
-
-    // fn withdraw(
-    //     token_contract_address: AztecAddress,
-    //     private_vault_contract_address: AztecAddress,
-    //     from: AztecAddress,
-    //     amount: u128,
-    // ) {
+    // @dev - Call the X402PrivatePaymentRouter#withdraw()
+    env.call_private(payer, x402_private_payment_router.withdraw(token_contract_address, private_vault_contract_address, amount_to_be_withdrawn));
 
     // [TODO]:
 }
