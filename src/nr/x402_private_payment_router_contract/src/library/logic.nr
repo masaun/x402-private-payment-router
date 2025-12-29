@@ -13,7 +13,7 @@ use aztec::{
 };
 
 // @dev - X402PrivatePaymentRouter contract
-use X402PrivatePaymentRouter;
+use crate::X402PrivatePaymentRouter;
 
 /** =================================================== *
  *  LOGIC LIBRARIES for the #[contract_library_method]  *
