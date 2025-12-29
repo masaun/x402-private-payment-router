@@ -58,7 +58,7 @@ unconstrained fn withdraw_success() {
     );
 }
 
-// unconstrained fn authorized_payment_success() {
+// unconstrained fn settle_payment_success() {
 //     // // @dev - Check whether a payment ID was properly incremented.
 //     // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
 //     // assert(payment_id == 1);
@@ -128,17 +128,23 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     token_utils::check_private_balance(env, token_contract_address, payer, transfer_amount);
 
     // ---------------------------------------------------------------------//
+    //    [Time Travel]: Advance block                                      //
+    // ---------------------------------------------------------------------//
+    // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
+    let last_block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
+    debug_log_format("--------- last block_timestamp: {0} ---------", [last_block_timestamp as Field]);
+
+    // @dev - Mine the block at the specified timestamp to advance the block number / block timestamp
+    env.mine_block_at(last_block_timestamp);
+
+    // @dev - Get the new block timestamp
+    let new_block_timestamp = env.last_block_timestamp();
+    debug_log_format("--------- new block_timestamp: {0} ---------", [new_block_timestamp as Field]);
+
+    // ---------------------------------------------------------------------//
     //    Calling the deposit() of the X402PrivatePaymentRouter contract    //
     // ---------------------------------------------------------------------//
     let amount_to_be_deposited = (1000 as u128);
-
-    // @dev - [Time Travel]: Advance block to ensure the transfer is processed
-    // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
-    let block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
-    env.mine_block_at(block_timestamp);
-
-    let token_transfer_message = "-------------- The test of the token.transfer_private_to_private() in the x402_private_payment_router_test.nr has been done!!! --------------";
-    debug_log(token_transfer_message);
 
     // @dev - The X402PrivatePaymentRouter#deposit() internally calls:
     // @dev   1. Token.transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
@@ -202,6 +208,48 @@ pub unconstrained fn call_withdraw_function_of_x402_private_payment_router_contr
     private_vault_contract_address: AztecAddress,
     payer: AztecAddress,
 ) {
+    // @dev - Create the contract instance of both contracts the PrivateVault and the Token.
+    let token = Token::at(token_contract_address);
+    let x402_private_payment_router = X402PrivatePaymentRouter::at(x402_private_payment_router_contract_address);
+    let private_vault = PrivateVault::at(private_vault_contract_address);
+
+    // @dev - Get the token balances before the withdrawal
+    let balance_of_private_vault_before_withdrawal = token_utils::get_private_balance(env, token_contract_address, private_vault_contract_address);
+    let balance_of_payer_before_withdrawal = token_utils::get_private_balance(env, token_contract_address, payer);
+    debug_log_format("--------- balance_of_private_vault (before withdrawal): {0} ---------", [balance_of_private_vault_before_withdrawal as Field]);
+    debug_log_format("--------- balance_of_payer (before withdrawal): {0} ---------", [balance_of_payer_before_withdrawal as Field]);
+
+    // ---------------------------------------------------------------------//
+    //    [Time Travel]: Advance block                                      //
+    // ---------------------------------------------------------------------//
+    // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
+    let last_block_timestamp = env.last_block_timestamp() + 3600; // e.g., advance by 1 hour (3600 seconds)
+    debug_log_format("--------- last block_timestamp: {0} ---------", [last_block_timestamp as Field]);
+
+    // @dev - Mine the block at the specified timestamp to advance the block number / block timestamp
+    env.mine_block_at(last_block_timestamp);
+
+    // @dev - Get the new block timestamp
+    let new_block_timestamp = env.last_block_timestamp();
+    debug_log_format("--------- new block_timestamp: {0} ---------", [new_block_timestamp as Field]);
+
+    // ---------------------------------------------------------------------//
+    //    Calling the withdraw() of the X402PrivatePaymentRouter contract    //
+    // ---------------------------------------------------------------------//
+    let amount_to_be_withdrawn = (500 as u128);
+
+    // @dev - To directly transfer from the PrivateVault contract to a given payer via the X402PrivatePaymentRouter#withdraw(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
+    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(x402_private_payment_router_contract_address, payer, amount_to_be_withdrawn, 0);
+    authwit_cheatcodes::add_private_authwit_from_call_interface(
+        env,
+        private_vault_contract_address,
+        x402_private_payment_router_contract_address,
+        transfer_payer_to_x402_call_interface,
+    );
+
+    // @dev - Call the X402PrivatePaymentRouter#withdraw()
+    env.call_private(payer, x402_private_payment_router.withdraw(token_contract_address, private_vault_contract_address, amount_to_be_withdrawn));
+
     // [TODO]:
 }
 
