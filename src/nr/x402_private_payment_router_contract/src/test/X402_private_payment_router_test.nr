@@ -239,7 +239,7 @@ pub unconstrained fn call_withdraw_function_of_x402_private_payment_router_contr
     let amount_to_be_withdrawn = (500 as u128);
 
     // @dev - To directly transfer from the PrivateVault contract to a given payer via the X402PrivatePaymentRouter#withdraw(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
-    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(x402_private_payment_router_contract_address, payer, amount_to_be_withdrawn, 0);
+    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(private_vault_contract_address payer, amount_to_be_withdrawn, 0);
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         env,
         private_vault_contract_address,
