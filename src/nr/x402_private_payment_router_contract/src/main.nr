@@ -133,12 +133,12 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Store the payer address into the payer variables
         let payer = context.msg_sender().unwrap();
 
-        // @dev - Increase the private balance of the payer's wallet by the deposited amount.
-        _increase_wallet_balance(storage.wallets, payer, amount);
-
         // @dev - Directly transfer a given amount of a given token from a payer's wallet to the PrivateVault contract.
         // @dev - [NOTE]: Instead of internally calling the PrivateVault#deposit() inside the X402PrivatePaymentRouter#deposit(), we directly call the Token#transfer_private_to_private() inside the X402PrivatePaymentRouter#deposit() - This is because the notes created in a transaction aren't available to spend in the same transaction in Aztec Network. (This is only for a private function)
         token.transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0).call(&mut context);
+
+        // @dev - Increase the private deposited-token balance in the PrivateVault contract of a given payer by a given deposited amount.
+        _increase_wallet_balance(storage.wallets, payer, amount);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
@@ -146,7 +146,6 @@ pub contract X402PrivatePaymentRouter {
     fn withdraw(
         token_contract_address: AztecAddress,
         private_vault_contract_address: AztecAddress,
-        from: AztecAddress,
         amount: u128,
     ) {
         // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
@@ -170,11 +169,11 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Store the payer address into the payer variables
         let payer = context.msg_sender().unwrap();
 
-        // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
+        // @dev - Decrease the private deposited-token balance in the PrivateVault contract of a given payer by a given withdrawn amount.
         _decrease_wallet_balance(
             &mut context,
             storage.wallets, 
-            from, 
+            payer, // @dev - The "from" address, which attempt to withdraw a given amount.
             amount,
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
