@@ -138,7 +138,6 @@ pub contract X402PrivatePaymentRouter {
         token.transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0).call(&mut context);
 
         // @dev - Increase the private deposited-token balance in the PrivateVault contract of a given payer by a given deposited amount.
-        _increase_wallet_balance(storage.wallets, payer, amount);
     }
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
@@ -171,7 +170,7 @@ pub contract X402PrivatePaymentRouter {
 
         // @dev - Decrease the private deposited-token balance in the PrivateVault contract of a given payer by a given withdrawn amount.
         _decrease_wallet_balance(
-            &mut context,
+            //&mut context,
             storage.wallets, 
             payer, // @dev - The "from" address, which attempt to withdraw a given amount.
             amount,
@@ -223,7 +222,7 @@ pub contract X402PrivatePaymentRouter {
     
         // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount. (= This is similar to decreasing an internal balance of a mapping storage).
         _decrease_wallet_balance(
-            &mut context,
+            //&mut context,
             storage.wallets, 
             payer, 
             amount,
@@ -307,15 +306,17 @@ pub contract X402PrivatePaymentRouter {
     /// @param max_notes The maximum number of notes to process in a single call
     #[contract_library_method]
     fn _decrease_wallet_balance(
-        context: &mut PrivateContext,
+        //context: &mut PrivateContext,
         wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
         account: AztecAddress,
         amount: u128,
         max_notes: u32,
     ) {
-        // Subtracts `amount` from the private balance of `account`
-        let change = _subtract_balance(context, wallets, account, amount, max_notes);
-        // Increases `change` to the private balance of `account`, and emits a private balance note to account
+        // @dev - Subtracts `amount` from the private balance of `account`
+        let change = _subtract_balance(wallets, account, amount, max_notes);
+        //let change = _subtract_balance(context, wallets, account, amount, max_notes);
+
+        // @dev - Increases `change` to the private balance of `account`, and emits a private balance note to account
         wallets.at(account).add(account, change).emit(
             account,
             MessageDelivery.CONSTRAINED_ONCHAIN,
@@ -332,7 +333,7 @@ pub contract X402PrivatePaymentRouter {
     /// @return The change to return to the owner
     #[contract_library_method]
     fn _subtract_balance(
-        context: &mut PrivateContext,
+        //context: &mut PrivateContext,
         wallets: Map<AztecAddress, WalletSet<&mut PrivateContext>, &mut PrivateContext>,
         account: AztecAddress,
         amount: u128,
