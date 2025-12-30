@@ -58,12 +58,12 @@ unconstrained fn withdraw_success() {
     );
 }
 
-// unconstrained fn settle_payment_success() {
-//     // // @dev - Check whether a payment ID was properly incremented.
-//     // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
-//     // assert(payment_id == 1);
-//     // debug_log_format("--------- payment_id: {0} ---------", [payment_id as Field]);
-// }
+unconstrained fn settle_payment_success() {
+    // // @dev - Check whether a payment ID was properly incremented.
+    // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
+    // assert(payment_id == 1);
+    // debug_log_format("--------- payment_id: {0} ---------", [payment_id as Field]);
+}
 
 
 
