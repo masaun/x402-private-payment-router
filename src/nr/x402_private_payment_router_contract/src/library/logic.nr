@@ -17,7 +17,7 @@ use aztec::{
  * ==================================================== */
 
 #[contract_library_method]
-pub fn create_private_contract_instances(
+pub fn create_contract_instances(
     x402_private_payment_router_contract_address: AztecAddress,
     token_contract_address: AztecAddress,
     private_vault_contract_address: AztecAddress,
