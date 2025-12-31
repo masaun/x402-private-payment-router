@@ -49,6 +49,9 @@ pub contract X402PrivatePaymentRouter {
         messages::message_delivery::MessageDelivery
     };
 
+    // @dev - Import the contract library methodss
+    use library::logic::{create_contract_instances};
+
     // @dev - Import the PrivateVault contract (private_vault_contract/src/main.nr)
     use private_vault::PrivateVault;
 
@@ -112,14 +115,21 @@ pub contract X402PrivatePaymentRouter {
         private_vault_contract_address: AztecAddress,
         amount: u128,
     ) {
-        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
-        let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
+        // @dev - Create the contract instances
+        let (x402_private_payment_router, private_vault, token) = create_contract_instances(
+            context.this_address(),
+            token_contract_address,
+            private_vault_contract_address,
+        );
 
-        // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
-        let private_vault = PrivateVault::at(private_vault_contract_address);
+        // // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
+        // let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
-        // @dev - Create the contract instance of the Token contract
-        let token = Token::at(token_contract_address);
+        // // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
+        // let private_vault = PrivateVault::at(private_vault_contract_address);
+
+        // // @dev - Create the contract instance of the Token contract
+        // let token = Token::at(token_contract_address);
 
         // @dev - Store the x402PrivatePaymentRouter contract address into a variable
         let X402_PRIVATE_PAYMENT_ROUTER = context.this_address();

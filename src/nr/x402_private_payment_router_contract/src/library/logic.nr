@@ -24,12 +24,15 @@ pub fn create_contract_instances(
 ) -> (ContractInstance, ContractInstance, ContractInstance) {
     // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
     let x402_private_payment_router: ContractInstance = get_contract_instance(x402_private_payment_router_contract_address);
+    //let x402_private_payment_router = X402PrivatePaymentRouter::at(x402_private_payment_router_contract_address);
 
     // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
     let private_vault: ContractInstance = get_contract_instance(private_vault_contract_address);
+    //let private_vault = PrivateVault::at(private_vault_contract_address);
 
     // @dev - Create the contract instance of the Token contract
     let token: ContractInstance = get_contract_instance(token_contract_address);
+    //let token = Token::at(token_contract_address);
 
     (x402_private_payment_router, private_vault, token)
 }
