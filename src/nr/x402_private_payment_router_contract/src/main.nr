@@ -49,6 +49,9 @@ pub contract X402PrivatePaymentRouter {
         messages::message_delivery::MessageDelivery
     };
 
+    // @dev - Import the contract library methodss
+    //use crate::library::logic::{create_contract_instances};
+
     // @dev - Import the PrivateVault contract (private_vault_contract/src/main.nr)
     use private_vault::PrivateVault;
 
@@ -112,6 +115,13 @@ pub contract X402PrivatePaymentRouter {
         private_vault_contract_address: AztecAddress,
         amount: u128,
     ) {
+        // @dev - Create the contract instances via the method-imported from the library/logic.nr
+        // let (x402_private_payment_router, private_vault, token) = create_contract_instances(
+        //     context.this_address(),
+        //     token_contract_address,
+        //     private_vault_contract_address,
+        // );
+
         // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
         let x402_private_payment_router = X402PrivatePaymentRouter::at(context.this_address());
 
@@ -138,7 +148,14 @@ pub contract X402PrivatePaymentRouter {
         token.transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0).call(&mut context);
 
         // @dev - Increase the private deposited-token balance in the PrivateVault contract of a given payer by a given deposited amount.
+        _increase_wallet_balance(
+            //&mut context,
+            storage.wallets, 
+            payer, 
+            amount,
+        );
     }
+
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
     #[external("private")]
@@ -290,7 +307,6 @@ pub contract X402PrivatePaymentRouter {
     ********************************************/
 
     /// @notice Updates the given storage pointer `wallets` to increase the (private) balance of `to` wallet by `amount`
-    /// @param context The private context
     /// @param wallets - The storage pointer to the wallets, which includes the private balances
     /// @param to The address of the recipient
     /// @param amount The amount of tokens to increase the balance by
