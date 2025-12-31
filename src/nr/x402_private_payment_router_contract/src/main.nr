@@ -290,7 +290,6 @@ pub contract X402PrivatePaymentRouter {
     ********************************************/
 
     /// @notice Updates the given storage pointer `wallets` to increase the (private) balance of `to` wallet by `amount`
-    /// @param context The private context
     /// @param wallets - The storage pointer to the wallets, which includes the private balances
     /// @param to The address of the recipient
     /// @param amount The amount of tokens to increase the balance by

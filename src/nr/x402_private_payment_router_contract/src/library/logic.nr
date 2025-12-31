@@ -22,9 +22,6 @@ pub fn create_private_contract_instances(
     token_contract_address: AztecAddress,
     private_vault_contract_address: AztecAddress,
 ) -> (ContractInstance, ContractInstance, ContractInstance) {
-    // Get the contract instance
-    let escrow_instance: ContractInstance = get_contract_instance(escrow);
-
     // @dev - Create the contract instance of the X402PrivatePaymentRouter contract
     let x402_private_payment_router: ContractInstance = get_contract_instance(x402_private_payment_router_contract_address);
 
