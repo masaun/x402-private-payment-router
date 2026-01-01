@@ -141,17 +141,18 @@ pub contract X402PrivatePaymentRouter {
         let TOKEN = token_contract_address;
 
         // @dev - Store the payer address into the payer variables
-        let payer = context.msg_sender().unwrap();
+        let PAYER = context.msg_sender().unwrap();
 
-        // @dev - Directly transfer a given amount of a given token from a payer's wallet to the PrivateVault contract.
-        // @dev - [NOTE]: Instead of internally calling the PrivateVault#deposit() inside the X402PrivatePaymentRouter#deposit(), we directly call the Token#transfer_private_to_private() inside the X402PrivatePaymentRouter#deposit() - This is because the notes created in a transaction aren't available to spend in the same transaction in Aztec Network. (This is only for a private function)
-        token.transfer_private_to_private(payer, PRIVATE_VAULT, amount, 0).call(&mut context);
+        // @dev - A given amount of a given token would be "directly" deposited from the payer's wallet to the PrivateVault contract.
+        private_vault
+            .deposit(TOKEN, PAYER, amount) // @dev - Inside the PrivateVault#deposit(), token.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0) is internally called. 
+            .call(&mut context);
 
         // @dev - Increase the private deposited-token balance in the PrivateVault contract of a given payer by a given deposited amount.
         _increase_wallet_balance(
             //&mut context,
             storage.wallets, 
-            payer, 
+            PAYER, 
             amount,
         );
     }
@@ -194,10 +195,9 @@ pub contract X402PrivatePaymentRouter {
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
 
-        // @dev - Withdraw a given amount of a given token from the PrivateVault contract directly to the payer's wallet.
-        // @dev - The PrivateVault.withdraw() internally calls Token.transfer_private_to_private(PRIVATE_VAULT, PAYER, amount, 0)
+        // @dev - A given amount of a given token would be "directly" withdrawn from the PrivateVault contract to the payer's wallet.
         private_vault
-            .withdraw(TOKEN, PAYER, amount)
+            .withdraw(TOKEN, PAYER, amount) // @dev - Inside the PrivateVault#withdraw(), token.transfer_private_to_private(PRIVATE_VAULT, PAYER, amount, 0) is internally called. 
             .call(&mut context);
     }
 

@@ -146,18 +146,14 @@ pub unconstrained fn call_deposit_function_of_x402_private_payment_router_contra
     // ---------------------------------------------------------------------//
     let amount_to_be_deposited = (1000 as u128);
 
-    // @dev - The X402PrivatePaymentRouter#deposit() internally calls:
-    // @dev   1. Token.transfer_private_to_private(payer, X402_PRIVATE_PAYMENT_ROUTER, amount, 0)
-    // @dev   2. Insted of internally calling the PrivateVault#deposit() inside the X402PrivatePaymentRouter#deposit(), we directly call the Token#transfer_private_to_private() inside the X402PrivatePaymentRouter#deposit() - This is because the notes created in a transaction aren't available to spend in the same transaction in Aztec Network. (This is only for a private function)
-    // @dev      => By doing so, a given amoutn of Token will directry be able to trasnfer a payer to the PrivateVault contract via the X402PrivatePaymentRouter#deposit().
-    
-    // @dev - To directly transfer from a payer to the PrivateVault contract via the X402PrivatePaymentRouter#deposit(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
-    let transfer_payer_to_x402_call_interface = token.transfer_private_to_private(payer, private_vault_contract_address, amount_to_be_deposited, 0);
+    // @dev - Since the PrivateVault#deposit(), which calls token.transfer_private_to_private(payer, vault, amount), would internally be called inside the the X402PrivatePaymentRouter#deposit(),
+    // @dev - we need to authorize PrivateVault to transfer tokens on behalf of the payer
+    let transfer_payer_to_vault_call_interface = token.transfer_private_to_private(payer, private_vault_contract_address, amount_to_be_deposited, 0);
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         env,
         payer,
-        x402_private_payment_router_contract_address,
-        transfer_payer_to_x402_call_interface,
+        private_vault_contract_address,  // PrivateVault will be the one actually calling the transfer
+        transfer_payer_to_vault_call_interface,
     );
 
     // @dev - Call the X402PrivatePaymentRouter#deposit() -> now payer has tokens to deposit and authwits are set for both internal token transfers

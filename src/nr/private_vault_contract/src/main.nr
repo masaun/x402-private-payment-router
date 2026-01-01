@@ -88,7 +88,6 @@ pub contract PrivateVault {
     /*******************************
     *   @notice - Main functions   *
     *******************************/
-
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
     fn deposit(
@@ -129,13 +128,13 @@ pub contract PrivateVault {
         let PRIVATE_VAULT = context.this_address();
 
         // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount.
-        // _decrease_vault_wallet_balance(
-        //     &mut context,
-        //     storage.vault_wallets, 
-        //     PRIVATE_VAULT, 
-        //     amount,
-        //     INITIAL_TRANSFER_CALL_MAX_NOTES,
-        // );
+        _decrease_vault_wallet_balance(
+            &mut context,
+            storage.vault_wallets, 
+            PRIVATE_VAULT, 
+            amount,
+            INITIAL_TRANSFER_CALL_MAX_NOTES,
+        );
 
         // @dev - Transfer a given amount of a given token from this vault contract to a payer's wallet. 
         token.transfer_private_to_private(PRIVATE_VAULT, to, amount, 0).call(&mut context);
