@@ -238,19 +238,34 @@ pub unconstrained fn call_withdraw_function_of_x402_private_payment_router_contr
     // ---------------------------------------------------------------------//
     let amount_to_be_withdrawn = (500 as u128);
 
-    // @dev - To directly transfer from the PrivateVault contract to a given payer via the X402PrivatePaymentRouter#withdraw(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
-    let transfer_private_vault_to_payer_via_x402_router_call_interface = token.transfer_private_to_private(private_vault_contract_address, payer, amount_to_be_withdrawn, 0);
-    authwit_cheatcodes::add_private_authwit_from_call_interface(
-        env,
-        private_vault_contract_address,
-        x402_private_payment_router_contract_address,
-        transfer_private_vault_to_payer_via_x402_router_call_interface,
-    );
-
     // @dev - Call the X402PrivatePaymentRouter#withdraw()
+    // @dev - The X402#withdraw() internally calls PrivateVault#withdraw(), which then calls Token#transfer_private_to_private()
+    // @dev - No authwit is needed because PrivateVault has native authority to transfer its own tokens
     env.call_private(payer, x402_private_payment_router.withdraw(token_contract_address, private_vault_contract_address, amount_to_be_withdrawn));
 
-    // [TODO]:
+    // @dev - Get the token balances after the withdrawal
+    let balance_of_private_vault_after_withdrawal = token_utils::get_private_balance(env, token_contract_address, private_vault_contract_address);
+    let balance_of_payer_after_withdrawal = token_utils::get_private_balance(env, token_contract_address, payer);
+    debug_log_format("--------- balance_of_private_vault (after withdrawal): {0} ---------", [balance_of_private_vault_after_withdrawal as Field]);
+    debug_log_format("--------- balance_of_payer (after withdrawal): {0} ---------", [balance_of_payer_after_withdrawal as Field]);
+
+    // @dev - Check balances after withdrawal
+    token_utils::check_private_balance(
+        env,
+        token_contract_address,
+        private_vault_contract_address,
+        balance_of_private_vault_before_withdrawal - amount_to_be_withdrawn,
+    );
+    token_utils::check_private_balance(
+        env,
+        token_contract_address,
+        payer,
+        balance_of_payer_before_withdrawal + amount_to_be_withdrawn,
+    );
+
+    // @dev - Logging the simple messages
+    let test_message = "-------------- The test of the X402PrivatePaymentRouter#withdraw() has been done!!! --------------";
+    debug_log(test_message);
 }
 
 

@@ -194,19 +194,10 @@ pub contract X402PrivatePaymentRouter {
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
 
-        // @dev - Withdraw a given amount of a given token from the PrivateVault contract to this contract.
-        // private_vault
-        //     .withdraw(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
-        //     .call(&mut context);
-
-        // @dev - Transfer a given amount of a given token from this X402PrivatePaymentRouter contract to a given payer's wallet. 
-        // token
-        //     .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, payer, amount, 0)
-        //     .call(&mut context);
-
-        // @dev - Directly transfer from the PrivateVault contract to a given payer via the X402PrivatePaymentRouter#withdraw(), a payer should authorize the X402PrivatePaymentRouter contract to transfer tokens on their behalf to PrivateVault
-        token
-            .transfer_private_to_private(PRIVATE_VAULT, payer, amount, 0)
+        // @dev - Withdraw a given amount of a given token from the PrivateVault contract directly to the payer's wallet.
+        // @dev - The PrivateVault.withdraw() internally calls Token.transfer_private_to_private(PRIVATE_VAULT, PAYER, amount, 0)
+        private_vault
+            .withdraw(TOKEN, PAYER, amount)
             .call(&mut context);
     }
 
