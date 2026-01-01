@@ -183,13 +183,13 @@ pub contract X402PrivatePaymentRouter {
         let TOKEN = token_contract_address;
 
         // @dev - Store the payer address into the payer variables
-        let payer = context.msg_sender().unwrap();
+        let PAYER = context.msg_sender().unwrap();
 
         // @dev - Decrease the private deposited-token balance in the PrivateVault contract of a given payer by a given withdrawn amount.
         _decrease_wallet_balance(
             //&mut context,
             storage.wallets, 
-            payer, // @dev - The "from" address, which attempt to withdraw a given amount.
+            PAYER, // @dev - The "from" address, which attempt to withdraw a given amount.
             amount,
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
@@ -240,13 +240,15 @@ pub contract X402PrivatePaymentRouter {
         let TOKEN = token_contract_address;
 
         // @dev - Create the payer instance, which the msg_sender is stored.
-        let payer: AztecAddress = context.msg_sender().unwrap();
+        let PAYER: AztecAddress = context.msg_sender().unwrap();
+
+        let PAYEE: AztecAddress = payee;
     
         // @dev - Decrease the private balance of the payer's wallet by the withdrawn amount. (= This is similar to decreasing an internal balance of a mapping storage).
         _decrease_wallet_balance(
             //&mut context,
             storage.wallets, 
-            payer, 
+            PAYER, 
             amount,
             INITIAL_TRANSFER_CALL_MAX_NOTES,
         );
@@ -261,7 +263,7 @@ pub contract X402PrivatePaymentRouter {
 
         // @dev - At the second step, transfering a given amount of a given token from this X402PrivatePaymentRouter contract to a given payee's wallet. 
         token
-            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, payee, amount, 0)
+            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PAYEE, amount, 0)
             .call(&mut context);
 
         // @dev - Public function: The payment_id is incremented internally.
