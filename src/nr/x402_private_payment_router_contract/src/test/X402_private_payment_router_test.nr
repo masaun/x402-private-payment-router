@@ -61,6 +61,7 @@ unconstrained fn withdraw_success() {
 /**
  * @notice - The smart contract test for the settle_payment() of the X402PrivatePaymentRouter contract
  */
+#[test]
 unconstrained fn settle_payment_success() {
     // @dev - Call the X402PrivatePaymentRouter#deposit() first to deposit a given amount of the Token into the X402PrivatePaymentRouter contract
     let (
@@ -71,6 +72,8 @@ unconstrained fn settle_payment_success() {
         admin, 
         payer
     ) = call_deposit_function_of_x402_private_payment_router_contract();
+    // @dev - Create the X402PrivatePaymentRouter contract instance
+    let x402_private_payment_router = X402PrivatePaymentRouter::at(x402_private_payment_router_contract_address);
 
     // @dev - Create a payee account
     let payee = env.create_light_account(); // @dev - NOTE: To use the create_light_account() function, the TestEnvironment (env) must be "mutable".
@@ -85,10 +88,10 @@ unconstrained fn settle_payment_success() {
         payee
     );
 
-    // // @dev - Check whether a payment ID was properly incremented.
-    // let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
-    // assert(payment_id == 1);
-    // debug_log_format("--------- payment_id: {0} ---------", [payment_id as Field]);
+    // @dev - Check whether a payment ID was properly incremented.
+    let payment_id = env.view_public(x402_private_payment_router.get_payment_id());
+    assert(payment_id == 1);
+    debug_log_format("--------- payment_id: {0} ---------", [payment_id as Field]);
 }
 
 
@@ -316,6 +319,29 @@ pub unconstrained fn call_settle_payment_function_of_x402_private_payment_router
     debug_log_format("--------- balance_of_payee (before settlement): {0} ---------", [balance_of_payee_before_settlement as Field]);
 
     // ---------------------------------------------------------------------//
+    //    Calling the withdraw() of the X402PrivatePaymentRouter contract    //
+    // ---------------------------------------------------------------------//
+    let amount_to_be_settled = (500 as u128);
+
+    // @dev - Call the X402PrivatePaymentRouter#settle_payment()
+    env.call_private(payer, x402_private_payment_router.settle_payment(
+        token_contract_address, 
+        private_vault_contract_address, 
+        payee, 
+        amount_to_be_settled,
+        0,   // @dev - payment_hash: Not used in this test
+        payee              // @dev - event_recipient: payee
+    ));
+
+    // @dev - Get the token balances after the settlement
+    let balance_of_private_vault_after_settlement = token_utils::get_private_balance(env, token_contract_address, private_vault_contract_address);
+    let balance_of_payer_after_settlement = token_utils::get_private_balance(env, token_contract_address, payer);
+    let balance_of_payee_after_settlement = token_utils::get_private_balance(env, token_contract_address, payee);
+    debug_log_format("--------- balance_of_private_vault (after settlement): {0} ---------", [balance_of_private_vault_after_settlement as Field]);
+    debug_log_format("--------- balance_of_payer (after settlement): {0} ---------", [balance_of_payer_after_settlement as Field]);
+    debug_log_format("--------- balance_of_payee (after settlement): {0} ---------", [balance_of_payee_after_settlement as Field]);
+
+    // ---------------------------------------------------------------------//
     //    [Time Travel]: Advance block                                      //
     // ---------------------------------------------------------------------//
     // @dev - Mines an empty block at a given timestamp, causing the next public execution to occur at this time (like `set_next_block_timestamp`), but also allowing for private execution to happen using this empty block as the anchor block.
@@ -329,24 +355,9 @@ pub unconstrained fn call_settle_payment_function_of_x402_private_payment_router
     let new_block_timestamp = env.last_block_timestamp();
     debug_log_format("--------- new block_timestamp: {0} ---------", [new_block_timestamp as Field]);
 
-    // ---------------------------------------------------------------------//
-    //    Calling the withdraw() of the X402PrivatePaymentRouter contract    //
-    // ---------------------------------------------------------------------//
-    let amount_to_be_settled = (500 as u128);
-
-    // @dev - Call the X402PrivatePaymentRouter#withdraw()
-    // @dev - The X402#withdraw() internally calls PrivateVault#withdraw(), which then calls Token#transfer_private_to_private()
-    // @dev - No authwit is needed because PrivateVault has native authority to transfer its own tokens
-    env.call_private(payer, x402_private_payment_router.withdraw(token_contract_address, private_vault_contract_address, amount_to_be_settled));
-
-    // @dev - Get the token balances after the settlement
-    let balance_of_private_vault_after_settlement = token_utils::get_private_balance(env, token_contract_address, private_vault_contract_address);
-    let balance_of_payer_after_settlement = token_utils::get_private_balance(env, token_contract_address, payer);
-    let balance_of_payee_after_settlement = token_utils::get_private_balance(env, token_contract_address, payee);
-    debug_log_format("--------- balance_of_private_vault (after settlement): {0} ---------", [balance_of_private_vault_after_settlement as Field]);
-    debug_log_format("--------- balance_of_payer (after settlement): {0} ---------", [balance_of_payer_after_settlement as Field]);
-    debug_log_format("--------- balance_of_payee (after settlement): {0} ---------", [balance_of_payee_after_settlement as Field]);
-
+    // ------------------------------------------------------//
+    //    Check balances after settlement & Time Travel      //
+    // ------------------------------------------------------//
     // @dev - Check balances after settlement
     token_utils::check_private_balance(
         env,
@@ -358,7 +369,7 @@ pub unconstrained fn call_settle_payment_function_of_x402_private_payment_router
         env,
         token_contract_address,
         payer,
-        balance_of_payer_before_settlement + amount_to_be_settled,
+        balance_of_payer_before_settlement,
     );
     token_utils::check_private_balance(
         env,

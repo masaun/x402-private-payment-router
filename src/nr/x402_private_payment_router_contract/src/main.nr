@@ -207,9 +207,8 @@ pub contract X402PrivatePaymentRouter {
         token_contract_address: AztecAddress,
         private_vault_contract_address: AztecAddress,
         payee: AztecAddress,
-        payment_hash: Field,
-        token: AztecAddress,
         amount: u128,
+        payment_hash: Field,
         event_recipient: AztecAddress,
     ) {
         // @dev - Create the contract instance of the X402PrivatePayment contract
