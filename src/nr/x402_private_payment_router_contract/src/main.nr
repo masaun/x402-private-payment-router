@@ -247,14 +247,9 @@ pub contract X402PrivatePaymentRouter {
         // @dev - Increase the private balance of the payee's wallet. (= This is similar to increasing an internal balance of a mapping storage)
         //_increase_wallet_balance(storage.wallets, payee, amount);
 
-        // @dev - At the first step, withdrawing a given amount of a given token from the PrivateVault contract to this X402PrivatePaymentRouter contract.
+        // @dev - Directly withdraw a given amount of a given token from the PrivateVault contract to a given payee.
         private_vault
-            .withdraw(TOKEN, X402_PRIVATE_PAYMENT_ROUTER, amount)
-            .call(&mut context);
-
-        // @dev - At the second step, transfering a given amount of a given token from this X402PrivatePaymentRouter contract to a given payee's wallet. 
-        token
-            .transfer_private_to_private(X402_PRIVATE_PAYMENT_ROUTER, PAYEE, amount, 0)
+            .withdraw(TOKEN, PAYEE, amount)
             .call(&mut context);
 
         // @dev - Public function: The payment_id is incremented internally.
