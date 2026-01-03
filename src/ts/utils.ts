@@ -1,18 +1,14 @@
 import { Wallet } from "@aztec/aztec.js/wallet";
 import {
   X402PrivatePaymentRouterContract,
-  X402PrivatePaymentRouterContractArtifact,
 } from "../artifacts/X402PrivatePaymentRouter.js";
 import {
   PrivateVaultContract,
-  PrivateVaultContractArtifact,
 } from "../artifacts/PrivateVault.js";
 import {
   TokenContract,
-  TokenContractArtifact,
 } from "../artifacts/Token.js";
 import { AztecAddress } from "@aztec/stdlib/aztec-address";
-import { Contract } from "@aztec/aztec.js/contracts";
 
 /**
  * Deploys the Token contract.
@@ -33,17 +29,17 @@ export async function deployToken(
   upgradeAuthority: AztecAddress,
 ): Promise<TokenContract> {
   const deployerAddress = (await deployer.getAccounts())[0]!.item;
-  const deployMethod = await Contract.deploy(
+  const contract = await TokenContract.deploy(
     deployer,
-    TokenContractArtifact,
-    [name, symbol, decimals, asset, upgradeAuthority],
-    "constructor",
-  );
-  const tx = await deployMethod.send({
-    from: deployerAddress,
-  });
-  const contract = await tx.deployed();
-  return contract as TokenContract;
+    name,
+    symbol,
+    decimals,
+    asset,
+    upgradeAuthority,
+  )
+    .send({ from: deployerAddress })
+    .deployed();
+  return contract;
 }
 
 /**
@@ -59,17 +55,14 @@ export async function deployPrivateVault(
   tokenContractAddress: AztecAddress,
 ): Promise<PrivateVaultContract> {
   const deployerAddress = (await deployer.getAccounts())[0]!.item;
-  const deployMethod = await Contract.deploy(
+  const contract = await PrivateVaultContract.deploy(
     deployer,
-    PrivateVaultContractArtifact,
-    [admin, tokenContractAddress],
-    "constructor",
-  );
-  const tx = await deployMethod.send({
-    from: deployerAddress,
-  });
-  const contract = await tx.deployed();
-  return contract as PrivateVaultContract;
+    admin,
+    tokenContractAddress,
+  )
+    .send({ from: deployerAddress })
+    .deployed();
+  return contract;
 }
 
 /**
@@ -86,12 +79,10 @@ export async function deployX402PrivatePaymentRouter(
   const deployMethod = await Contract.deploy(
     deployer,
     X402PrivatePaymentRouterContractArtifact,
-    [admin],
-    "constructor",
-  );
-  const tx = await deployMethod.send({
-    from: deployerAddress,
-  });
-  const contract = await tx.deployed();
-  return contract as X402PrivatePaymentRouterContract;
-}
+    [admcontract = await X402PrivatePaymentRouterContract.deploy(
+    deployer,
+    admin,
+  )
+    .send({ from: deployerAddress })
+    .deployed();
+  return c
