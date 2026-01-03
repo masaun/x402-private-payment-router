@@ -43,6 +43,38 @@ export async function deployToken(
 }
 
 /**
+ * Deploys the Token contract with a minter.
+ * @param deployer - The wallet to deploy the contract with.
+ * @param name - The name of the token.
+ * @param symbol - The symbol of the token.
+ * @param decimals - The decimals of the token.
+ * @param minter - The minter address.
+ * @param upgradeAuthority - The upgrade authority address.
+ * @returns A deployed contract instance.
+ */
+export async function deployTokenWithMinter(
+  deployer: Wallet,
+  name: string,
+  symbol: string,
+  decimals: bigint | number,
+  minter: AztecAddress,
+  upgradeAuthority: AztecAddress,
+): Promise<TokenContract> {
+  const deployerAddress = (await deployer.getAccounts())[0]!.item;
+  const contract = await TokenContract.deployWithOpts(
+    { wallet: deployer, method: "constructor_with_minter" },
+    name,
+    symbol,
+    decimals,
+    minter,
+    upgradeAuthority,
+  )
+    .send({ from: deployerAddress })
+    .deployed();
+  return contract;
+}
+
+/**
  * Deploys the PrivateVault contract.
  * @param deployer - The wallet to deploy the contract with.
  * @param admin - The address of the admin of the contract.

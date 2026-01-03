@@ -20,3 +20,6 @@ log/
 # Aztec SC related
 pxe-test-vault/
 pxe-test-x402/
+
+# Aztec SC test 
+test-output.log

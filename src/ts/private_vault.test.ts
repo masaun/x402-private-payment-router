@@ -3,7 +3,7 @@ import { TokenContract } from "../artifacts/Token.js";
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { TestWallet } from "@aztec/test-wallet/server";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
-import { deployPrivateVault, deployToken } from "./utils.js";
+import { deployPrivateVault, deployTokenWithMinter } from "./utils.js";
 import { AztecAddress } from "@aztec/stdlib/aztec-address";
 
 import {
@@ -46,14 +46,42 @@ describe("PrivateVault Contract", () => {
     [alice, bob, admin] = accounts;
   });
 
+  /**
+   * Helper function to create authwit for token deposit
+   * This allows the vault to transfer tokens from the user's account
+   */
+  async function authorizeDeposit(
+    from: AztecAddress,
+    amount: bigint,
+  ): Promise<void> {
+    // Create the transfer call that will happen inside the deposit function
+    // The vault will call: token.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
+    const transferAction = token.methods.transfer_private_to_private(
+      from,
+      privateVault.address,
+      amount,
+      0, // nonce must be 0 to match the vault's call
+    );
+
+    // Create authwit for this transfer
+    // The vault contract will be the caller when it executes the transfer
+    const witness = await wallet.createAuthWit(from, {
+      caller: privateVault.address,
+      action: transferAction,
+    });
+    
+    // Log for debugging
+    console.log(`Created authwit for ${from.toString()} to deposit ${amount}`);
+  }
+
   beforeEach(async () => {
-    // Deploy Token contract
-    token = await deployToken(
+    // Deploy Token contract with admin as minter
+    token = await deployTokenWithMinter(
       wallet,
       "Test Token",
       "TST",
       18n,
-      alice, // asset address
+      admin, // minter
       admin, // upgrade authority
     );
 
@@ -94,6 +122,9 @@ describe("PrivateVault Contract", () => {
     it("should allow user to deposit tokens into vault", async () => {
       const depositAmount = 100n;
 
+      // Authorize the vault to transfer tokens
+      await authorizeDeposit(alice, depositAmount);
+
       await privateVault.methods
         .deposit(token.address, alice, depositAmount)
         .send({ from: alice })
@@ -106,11 +137,13 @@ describe("PrivateVault Contract", () => {
       const firstDeposit = 100n;
       const secondDeposit = 200n;
 
+      await authorizeDeposit(alice, firstDeposit);
       await privateVault.methods
         .deposit(token.address, alice, firstDeposit)
         .send({ from: alice })
         .wait();
 
+      await authorizeDeposit(alice, secondDeposit);
       await privateVault.methods
         .deposit(token.address, alice, secondDeposit)
         .send({ from: alice })
@@ -123,11 +156,13 @@ describe("PrivateVault Contract", () => {
       const aliceDeposit = 150n;
       const bobDeposit = 250n;
 
+      await authorizeDeposit(alice, aliceDeposit);
       await privateVault.methods
         .deposit(token.address, alice, aliceDeposit)
         .send({ from: alice })
         .wait();
 
+      await authorizeDeposit(bob, bobDeposit);
       await privateVault.methods
         .deposit(token.address, bob, bobDeposit)
         .send({ from: bob })
@@ -139,6 +174,7 @@ describe("PrivateVault Contract", () => {
     it("should fail when depositing more than token balance", async () => {
       const excessiveAmount = 10000n; // More than minted
 
+      await authorizeDeposit(alice, excessiveAmount);
       await expect(async () => {
         await privateVault.methods
           .deposit(token.address, alice, excessiveAmount)
@@ -162,6 +198,7 @@ describe("PrivateVault Contract", () => {
 
     beforeEach(async () => {
       // Deposit tokens first
+      await authorizeDeposit(alice, depositAmount);
       await privateVault.methods
         .deposit(token.address, alice, depositAmount)
         .send({ from: alice })
@@ -233,6 +270,7 @@ describe("PrivateVault Contract", () => {
   describe("Vault Balance Management", () => {
     it("should handle sequential deposits and withdrawals", async () => {
       // Deposit
+      await authorizeDeposit(alice, 300n);
       await privateVault.methods
         .deposit(token.address, alice, 300n)
         .send({ from: alice })
@@ -245,6 +283,7 @@ describe("PrivateVault Contract", () => {
         .wait();
 
       // Deposit more
+      await authorizeDeposit(alice, 200n);
       await privateVault.methods
         .deposit(token.address, alice, 200n)
         .send({ from: alice })
@@ -264,11 +303,13 @@ describe("PrivateVault Contract", () => {
       const bobDeposit = 500n;
 
       // Both users deposit
+      await authorizeDeposit(alice, aliceDeposit);
       await privateVault.methods
         .deposit(token.address, alice, aliceDeposit)
         .send({ from: alice })
         .wait();
 
+      await authorizeDeposit(bob, bobDeposit);
       await privateVault.methods
         .deposit(token.address, bob, bobDeposit)
         .send({ from: bob })
@@ -294,6 +335,7 @@ describe("PrivateVault Contract", () => {
     it("should handle minimum deposit amount", async () => {
       const minAmount = 1n;
 
+      await authorizeDeposit(alice, minAmount);
       await privateVault.methods
         .deposit(token.address, alice, minAmount)
         .send({ from: alice })
@@ -316,6 +358,7 @@ describe("PrivateVault Contract", () => {
 
       const largeAmount = 50000n;
 
+      await authorizeDeposit(alice, largeAmount);
       await privateVault.methods
         .deposit(token.address, alice, largeAmount)
         .send({ from: alice })
@@ -354,6 +397,7 @@ describe("PrivateVault Contract", () => {
       const depositAmount = 100n;
 
       // The deposit should transfer tokens from user to vault
+      await authorizeDeposit(alice, depositAmount);
       await privateVault.methods
         .deposit(token.address, alice, depositAmount)
         .send({ from: alice })
@@ -366,6 +410,7 @@ describe("PrivateVault Contract", () => {
       const depositAmount = 200n;
       const withdrawAmount = 100n;
 
+      await authorizeDeposit(alice, depositAmount);
       await privateVault.methods
         .deposit(token.address, alice, depositAmount)
         .send({ from: alice })
@@ -382,12 +427,14 @@ describe("PrivateVault Contract", () => {
 
     it("should handle multiple concurrent users", async () => {
       // Alice deposits
+      await authorizeDeposit(alice, 300n);
       await privateVault.methods
         .deposit(token.address, alice, 300n)
         .send({ from: alice })
         .wait();
 
       // Bob deposits
+      await authorizeDeposit(bob, 400n);
       await privateVault.methods
         .deposit(token.address, bob, 400n)
         .send({ from: bob })
