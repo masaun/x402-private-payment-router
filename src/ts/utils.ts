@@ -76,13 +76,11 @@ export async function deployX402PrivatePaymentRouter(
   admin: AztecAddress,
 ): Promise<X402PrivatePaymentRouterContract> {
   const deployerAddress = (await deployer.getAccounts())[0]!.item;
-  const deployMethod = await Contract.deploy(
-    deployer,
-    X402PrivatePaymentRouterContractArtifact,
-    [admcontract = await X402PrivatePaymentRouterContract.deploy(
+  const contract = await X402PrivatePaymentRouterContract.deploy(
     deployer,
     admin,
   )
     .send({ from: deployerAddress })
     .deployed();
-  return c
+  return contract;
+}
