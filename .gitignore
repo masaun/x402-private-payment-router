@@ -16,3 +16,7 @@ log/
 .vscode
 .DS_Store
 .cursor
+
+# Aztec SC related
+pxe-test-vault/
+pxe-test-x402/
