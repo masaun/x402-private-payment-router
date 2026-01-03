@@ -1,5 +1,5 @@
-import { X402PrivatePaymentRouterContract as CounterContract } from "../artifacts/X402PrivatePaymentRouter.js";
-//import { CounterContract } from "../artifacts/Counter.js";
+//import { X402PrivatePaymentRouterContract as CounterContract } from "../artifacts/X402PrivatePaymentRouter.ts";
+import { CounterContract } from "../artifacts/Counter.js";
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { TestWallet } from "@aztec/test-wallet/server";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
