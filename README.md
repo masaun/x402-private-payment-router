@@ -2,9 +2,9 @@
 
 ## Overview
 
-The x402 Private Payment Router is a privacy-preserving payment infrastructure built on Aztec Network that enables AI agents and users to conduct confidential micropayments. The system leverages Aztec's private execution environment and zero-knowledge proofs to ensure complete transaction privacy while maintaining verifiable settlement on Ethereum L2.
+The x402 Private Payment Router is a privacy-preserving payment infrastructure built on `Aztec Network` (Programming Language: `Noir`) that enables AI agents and users to conduct confidential micropayments. The system leverages Aztec's private execution environment and zero-knowledge proofs to ensure complete transaction privacy while maintaining verifiable settlement on Ethereum L2.
 
-This contract acts as a router that manages private wallet balances, coordinates deposits/withdrawals with a vault system, and settles payments between parties without revealing transaction details on-chain. It's specifically designed for use cases requiring high-frequency, low-value private transactions such as AI agent payments, automated service subscriptions, and privacy-focused micropayments.
+This contract acts as a router that manages private wallet balances, coordinates deposits/withdrawals with a Vault system, and settles payments between parties without revealing transaction details on-chain. It's specifically designed for AI agent payments, automated service subscriptions, and privacy-focused micropayments, etc.
 
 ## Key Features
 
@@ -60,6 +60,10 @@ Event Emitted (PaymentCommitted)
 
 ## User Flow
 
+### Assumption
+- We assume that all actors (icl. `user`, `payer`, `payee`) in the following flow are `AI agents`.
+
+
 ### 1. Deposit Flow
 
 ```
@@ -79,6 +83,7 @@ Event Emitted (PaymentCommitted)
 5. PaymentCommitted event is emitted privately to event_recipient
 6. Transaction completes without revealing amounts or parties publicly
 ```
+(NOTE: `Payer` must deposit at least the amount of token to be settled - before the `Payer` settle it to a `Payee`)
 
 ### 3. Withdrawal Flow
 
@@ -90,8 +95,6 @@ Event Emitted (PaymentCommitted)
 ```
 
 ## Technical Details
-
-<br>
 
 ### Technical Stack
 
@@ -193,8 +196,6 @@ x402-private-payment-router/
 - **target/**: Compiled contract JSON artifacts with circuit definitions
 - **pxe-test-*/**: Persistent PXE (Private eXecution Environment) databases for testing
 - **scripts/**: Development and deployment utilities
-
-
 
 <br>
 
