@@ -2,7 +2,7 @@
 
 ## Overview
 
-The x402 Private Payment Router is a privacy-preserving payment infrastructure built on `Aztec Network` (Programming Language: `Noir`) that enables AI agents and users to conduct confidential micropayments. The system leverages Aztec's private execution environment and zero-knowledge proofs to ensure complete transaction privacy while maintaining verifiable settlement on Ethereum L2.
+The x402 Private Payment Router is a privacy-preserving payment infrastructure built on [`Aztec Network`](https://docs.aztec.network/) (Programming Language: [`Noir`](https://noir-lang.org/docs/)) that enables AI agents and users to conduct confidential micropayments. The system leverages Aztec's private execution environment and zero-knowledge proofs to ensure complete transaction privacy while maintaining verifiable settlement on Ethereum L2.
 
 This contract acts as a router that manages private wallet balances, coordinates deposits/withdrawals with a Vault system, and settles payments between parties without revealing transaction details on-chain. It's specifically designed for AI agent payments, automated service subscriptions, and privacy-focused micropayments, etc.
 
@@ -98,10 +98,10 @@ Event Emitted (PaymentCommitted)
 
 ### Technical Stack
 
-- Smart Contract: `Noir`
+- Smart Contract: [`Noir`](https://noir-lang.org/docs/)
   - nargo/noirc: `v1.0.0-beta.16`
 
-- Blockchain: `Aztec` Network (Ethereum L2 Rollup)
+- Blockchain: [`Aztec` Network](https://docs.aztec.network/) (Ethereum L2 Rollup)
   - aztec package: `v3.0.0-devnet.2`
 
 ### Storage Architecture
