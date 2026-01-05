@@ -32,18 +32,19 @@ describe("PrivateVault Contract", () => {
     );
 
     // Register initial test accounts
-    const accounts = await Promise.all(
+    await Promise.all(
       INITIAL_TEST_SECRET_KEYS.map(async (secret, i) => {
-        const accountManager = await wallet.createSchnorrAccount(
+        await wallet.createSchnorrAccount(
           secret,
           INITIAL_TEST_ACCOUNT_SALTS[i],
           INITIAL_TEST_ENCRYPTION_KEYS[i],
         );
-        return accountManager.address;
       }),
     );
     
-    [alice, bob, admin] = accounts;
+    // Get the registered accounts
+    const accounts = await wallet.getAccounts();
+    [alice, bob, admin] = [accounts[0].item, accounts[1].item, accounts[2].item];
   });
 
   /**
@@ -55,23 +56,37 @@ describe("PrivateVault Contract", () => {
     amount: bigint,
   ): Promise<void> {
     // Create the transfer call that will happen inside the deposit function
-    // The vault will call: token.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
-    const transferAction = token.methods.transfer_private_to_private(
+    // The vault will call: token.methods.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
+    const action = token.methods.transfer_private_to_private(
       from,
       privateVault.address,
       amount,
       0, // nonce must be 0 to match the vault's call
     );
 
-    // Create authwit for this transfer
-    // The vault contract will be the caller when it executes the transfer
-    const witness = await wallet.createAuthWit(from, {
-      caller: privateVault.address,
-      action: transferAction,
-    });
-    
-    // Log for debugging
-    console.log(`Created authwit for ${from.toString()} to deposit ${amount}`);
+    // Create authwit - the 'from' address authorizes the vault to make this call
+    await wallet.createAuthWit({ caller: privateVault.address, action });
+  }
+
+  /**
+   * Helper function to create authwit for token withdrawal
+   * This allows the vault to transfer tokens back to the user's account
+   */
+  async function authorizeWithdrawal(
+    to: AztecAddress,
+    amount: bigint,
+  ): Promise<void> {
+    // Create the transfer call that will happen inside the withdraw function
+    // The vault will call: token.transfer_private_to_private(PRIVATE_VAULT, to, amount, 0)
+    const action = token.methods.transfer_private_to_private(
+      privateVault.address,
+      to,
+      amount,
+      0, // nonce must be 0 to match the vault's call
+    );
+
+    // Create authwit - the vault address authorizes itself to make this call
+    await wallet.setPublicAuthWit({ caller: token.address, action }, true).send().wait();
   }
 
   beforeEach(async () => {
@@ -208,6 +223,7 @@ describe("PrivateVault Contract", () => {
     it("should allow user to withdraw deposited tokens", async () => {
       const withdrawAmount = 100n;
 
+      await authorizeWithdrawal(alice, withdrawAmount);
       await privateVault.methods
         .withdraw(token.address, alice, withdrawAmount)
         .send({ from: alice })
@@ -220,11 +236,13 @@ describe("PrivateVault Contract", () => {
       const firstWithdraw = 100n;
       const secondWithdraw = 150n;
 
+      await authorizeWithdrawal(alice, firstWithdraw);
       await privateVault.methods
         .withdraw(token.address, alice, firstWithdraw)
         .send({ from: alice })
         .wait();
 
+      await authorizeWithdrawal(alice, secondWithdraw);
       await privateVault.methods
         .withdraw(token.address, alice, secondWithdraw)
         .send({ from: alice })
@@ -234,6 +252,7 @@ describe("PrivateVault Contract", () => {
     });
 
     it("should allow full withdrawal of deposited amount", async () => {
+      await authorizeWithdrawal(alice, depositAmount);
       await privateVault.methods
         .withdraw(token.address, alice, depositAmount)
         .send({ from: alice })
@@ -245,6 +264,7 @@ describe("PrivateVault Contract", () => {
     it("should fail when withdrawing more than deposited", async () => {
       const excessiveAmount = depositAmount + 100n;
 
+      await authorizeWithdrawal(alice, excessiveAmount);
       await expect(async () => {
         await privateVault.methods
           .withdraw(token.address, alice, excessiveAmount)
@@ -258,6 +278,7 @@ describe("PrivateVault Contract", () => {
       // This test verifies withdrawal works to the specified recipient
       const withdrawAmount = 100n;
 
+      await authorizeWithdrawal(bob, withdrawAmount);
       await privateVault.methods
         .withdraw(token.address, bob, withdrawAmount)
         .send({ from: alice })
@@ -277,6 +298,7 @@ describe("PrivateVault Contract", () => {
         .wait();
 
       // Withdraw partial
+      await authorizeWithdrawal(alice, 100n);
       await privateVault.methods
         .withdraw(token.address, alice, 100n)
         .send({ from: alice })
@@ -290,6 +312,7 @@ describe("PrivateVault Contract", () => {
         .wait();
 
       // Withdraw again
+      await authorizeWithdrawal(alice, 150n);
       await privateVault.methods
         .withdraw(token.address, alice, 150n)
         .send({ from: alice })
@@ -316,12 +339,14 @@ describe("PrivateVault Contract", () => {
         .wait();
 
       // Alice withdraws
+      await authorizeWithdrawal(alice, 100n);
       await privateVault.methods
         .withdraw(token.address, alice, 100n)
         .send({ from: alice })
         .wait();
 
       // Bob should still be able to withdraw his full amount
+      await authorizeWithdrawal(bob, bobDeposit);
       await privateVault.methods
         .withdraw(token.address, bob, bobDeposit)
         .send({ from: bob })
@@ -341,6 +366,7 @@ describe("PrivateVault Contract", () => {
         .send({ from: alice })
         .wait();
 
+      await authorizeWithdrawal(alice, minAmount);
       await privateVault.methods
         .withdraw(token.address, alice, minAmount)
         .send({ from: alice })
@@ -364,6 +390,7 @@ describe("PrivateVault Contract", () => {
         .send({ from: alice })
         .wait();
 
+      await authorizeWithdrawal(alice, largeAmount);
       await privateVault.methods
         .withdraw(token.address, alice, largeAmount)
         .send({ from: alice })
@@ -382,6 +409,7 @@ describe("PrivateVault Contract", () => {
           .send({ from: admin })
           .wait();
 
+        await authorizeWithdrawal(charlie, 100n);
         await expect(async () => {
           await privateVault.methods
             .withdraw(token.address, charlie, 100n)
@@ -417,6 +445,7 @@ describe("PrivateVault Contract", () => {
         .wait();
 
       // The withdrawal should transfer tokens from vault to user
+      await authorizeWithdrawal(alice, withdrawAmount);
       await privateVault.methods
         .withdraw(token.address, alice, withdrawAmount)
         .send({ from: alice })
@@ -441,12 +470,14 @@ describe("PrivateVault Contract", () => {
         .wait();
 
       // Alice withdraws
+      await authorizeWithdrawal(alice, 150n);
       await privateVault.methods
         .withdraw(token.address, alice, 150n)
         .send({ from: alice })
         .wait();
 
       // Bob withdraws
+      await authorizeWithdrawal(bob, 200n);
       await privateVault.methods
         .withdraw(token.address, bob, 200n)
         .send({ from: bob })

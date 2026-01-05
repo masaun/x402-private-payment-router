@@ -7,7 +7,7 @@ import { createAztecNodeClient } from "@aztec/aztec.js/node";
 import { 
   deployX402PrivatePaymentRouter, 
   deployPrivateVault,
-  deployToken 
+  deployTokenWithMinter 
 } from "./utils.js";
 import { AztecAddress } from "@aztec/stdlib/aztec-address";
 
@@ -38,28 +38,80 @@ describe("X402PrivatePaymentRouter Contract", () => {
     );
 
     // Register initial test accounts
-    const accounts = await Promise.all(
+    await Promise.all(
       INITIAL_TEST_SECRET_KEYS.map(async (secret, i) => {
-        const accountManager = await wallet.createSchnorrAccount(
+        await wallet.createSchnorrAccount(
           secret,
           INITIAL_TEST_ACCOUNT_SALTS[i],
           INITIAL_TEST_ENCRYPTION_KEYS[i],
         );
-        return accountManager.address;
       }),
     );
     
-    [alice, bob, admin] = accounts;
+    // Get the registered accounts
+    const accounts = await wallet.getAccounts();
+    [alice, bob, admin] = [accounts[0].item, accounts[1].item, accounts[2].item];
   });
 
+  /**
+   * Helper function to authorize token deposit through vault
+   * The x402Router calls privateVault.deposit, which transfers tokens from user to vault
+   */
+  async function authorizeDeposit(
+    from: AztecAddress,
+    amount: bigint,
+  ): Promise<void> {
+    // The vault will transfer tokens: token.transfer_private_to_private(from, vault, amount, 0)
+    const action = token.methods.transfer_private_to_private(
+      from,
+      privateVault.address,
+      amount,
+      0,
+    );
+
+    // Create authwit allowing the vault to make this transfer
+    const intent = {
+      caller: privateVault.address,
+      action: action,
+    };
+
+    await wallet.createAuthWit(from, intent);
+  }
+
+  /**
+   * Helper function to authorize token withdrawal through vault
+   * The x402Router calls privateVault.withdraw, which transfers tokens from vault to user
+   */
+  async function authorizeWithdrawal(
+    to: AztecAddress,
+    amount: bigint,
+  ): Promise<void> {
+    // The vault will transfer tokens: token.transfer_private_to_private(vault, to, amount, 0)
+    const action = token.methods.transfer_private_to_private(
+      privateVault.address,
+      to,
+      amount,
+      0,
+    );
+
+    // Create authwit allowing the vault to make this transfer
+    // Note: The vault itself needs to authorize this transfer
+    const intent = {
+      caller: privateVault.address,
+      action: action,
+    };
+
+    await wallet.createAuthWit(privateVault.address, intent);
+  }
+
   beforeEach(async () => {
-    // Deploy Token contract
-    token = await deployToken(
+    // Deploy Token contract with admin as minter
+    token = await deployTokenWithMinter(
       wallet,
       "Test Token",
       "TST",
       18n,
-      alice, // asset address
+      admin, // minter
       admin, // upgrade authority
     );
 
@@ -103,6 +155,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
     it("should allow user to deposit tokens", async () => {
       const depositAmount = 100n;
 
+      await authorizeDeposit(alice, depositAmount);
       await x402Router.methods
         .deposit(token.address, privateVault.address, depositAmount)
         .send({ from: alice })
@@ -115,6 +168,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
     it("should fail when depositing more than balance", async () => {
       const excessiveAmount = 10000n; // More than minted
 
+      await authorizeDeposit(alice, excessiveAmount);
       await expect(async () => {
         await x402Router.methods
           .deposit(token.address, privateVault.address, excessiveAmount)
@@ -127,6 +181,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
   describe("Withdraw", () => {
     beforeEach(async () => {
       // Deposit first
+      await authorizeDeposit(alice, 500n);
       await x402Router.methods
         .deposit(token.address, privateVault.address, 500n)
         .send({ from: alice })
@@ -136,6 +191,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
     it("should allow user to withdraw deposited tokens", async () => {
       const withdrawAmount = 100n;
 
+      await authorizeWithdrawal(alice, withdrawAmount);
       await x402Router.methods
         .withdraw(token.address, privateVault.address, withdrawAmount)
         .send({ from: alice })
@@ -147,6 +203,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
     it("should fail when withdrawing more than deposited", async () => {
       const excessiveAmount = 1000n;
 
+      await authorizeWithdrawal(alice, excessiveAmount);
       await expect(async () => {
         await x402Router.methods
           .withdraw(token.address, privateVault.address, excessiveAmount)
@@ -162,6 +219,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
 
     beforeEach(async () => {
       // Deposit tokens first
+      await authorizeDeposit(alice, 500n);
       await x402Router.methods
         .deposit(token.address, privateVault.address, 500n)
         .send({ from: alice })
@@ -275,6 +333,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
 
     it("should increment payment_id after each settlement", async () => {
       // Deposit first
+      await authorizeDeposit(alice, 500n);
       await x402Router.methods
         .deposit(token.address, privateVault.address, 500n)
         .send({ from: alice })
@@ -325,6 +384,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
       const remainingAmount = 200n;
 
       // Step 1: Deposit
+      await authorizeDeposit(alice, depositAmount);
       await x402Router.methods
         .deposit(token.address, privateVault.address, depositAmount)
         .send({ from: alice })
@@ -344,6 +404,7 @@ describe("X402PrivatePaymentRouter Contract", () => {
         .wait();
 
       // Step 3: Withdraw remaining funds
+      await authorizeWithdrawal(alice, remainingAmount);
       await x402Router.methods
         .withdraw(token.address, privateVault.address, remainingAmount)
         .send({ from: alice })
