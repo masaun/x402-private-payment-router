@@ -65,7 +65,8 @@ describe("PrivateVault Contract", () => {
     );
 
     // Create authwit - the 'from' address authorizes the vault to make this call
-    await wallet.createAuthWit({ caller: privateVault.address, action });
+    const witness = await wallet.createAuthWit({ caller: privateVault.address, action }, from);
+    await wallet.addAuthWitness(witness);
   }
 
   /**
@@ -86,7 +87,8 @@ describe("PrivateVault Contract", () => {
     );
 
     // Create authwit - the vault address authorizes itself to make this call
-    await wallet.setPublicAuthWit({ caller: token.address, action }, true).send().wait();
+    const authwitInteraction = await wallet.setPublicAuthWit({ caller: token.address, action }, true);
+    await authwitInteraction.send().wait();
   }
 
   beforeEach(async () => {

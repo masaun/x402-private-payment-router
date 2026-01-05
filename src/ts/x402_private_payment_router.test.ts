@@ -75,7 +75,8 @@ describe("X402PrivatePaymentRouter Contract", () => {
       action: action,
     };
 
-    await wallet.createAuthWit(from, intent);
+    const witness = await wallet.createAuthWit(intent, from);
+    await wallet.addAuthWitness(witness);
   }
 
   /**
@@ -101,7 +102,8 @@ describe("X402PrivatePaymentRouter Contract", () => {
       action: action,
     };
 
-    await wallet.createAuthWit(privateVault.address, intent);
+    const authwitInteraction = await wallet.setPublicAuthWit(intent, true);
+    await authwitInteraction.send().wait();
   }
 
   beforeEach(async () => {
