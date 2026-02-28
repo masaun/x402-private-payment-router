@@ -70,13 +70,8 @@ describe("X402PrivatePaymentRouter Contract", () => {
     );
 
     // Create authwit allowing the vault to make this transfer
-    const intent = {
-      caller: privateVault.address,
-      action: action,
-    };
-
-    const witness = await wallet.createAuthWit(intent, from);
-    await wallet.addAuthWitness(witness);
+    // @ts-ignore - ContractFunctionInteractionCallIntent is supported but not in type signature
+    await wallet.createAuthWit(from, { caller: privateVault.address, action });
   }
 
   /**
@@ -97,13 +92,8 @@ describe("X402PrivatePaymentRouter Contract", () => {
 
     // Create authwit allowing the vault to make this transfer
     // Note: The vault itself needs to authorize this transfer
-    const intent = {
-      caller: privateVault.address,
-      action: action,
-    };
-
-    const authwitInteraction = await wallet.setPublicAuthWit(intent, true);
-    await authwitInteraction.send().wait();
+    // @ts-ignore - ContractFunctionInteractionCallIntent is supported but not in type signature
+    await (await wallet.setPublicAuthWit({ caller: privateVault.address, action }, true, privateVault.address)).send().wait();
   }
 
   beforeEach(async () => {

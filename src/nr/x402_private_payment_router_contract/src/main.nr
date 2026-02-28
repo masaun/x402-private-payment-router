@@ -107,7 +107,6 @@ pub contract X402PrivatePaymentRouter {
     /*******************************
     *   @notice - Main functions   *
     *******************************/
-
     /// @dev - Deposit a given amount of funds into a payer's private wallet + Increments the payment ID
     #[external("private")]
     fn deposit(
@@ -156,7 +155,6 @@ pub contract X402PrivatePaymentRouter {
             amount,
         );
     }
-
 
     /// @dev - Withdraw a given payment ID of the funds-deposited from a payer's private wallet
     #[external("private")]

@@ -16,6 +16,7 @@ This contract acts as a router that manages private wallet balances, coordinates
 - **Note-Based Balance System**: Utilizes Aztec's note system (WalletSet) for gas-optimized balance management
 - **Event Emission**: Emits private events for off-chain tracking and auditability while preserving privacy
 
+
 ## Architecture
 
 ### System Components

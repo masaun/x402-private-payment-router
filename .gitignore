@@ -23,3 +23,9 @@ pxe-test-x402/
 
 # Aztec SC test 
 test-output.log
+
+# Node modules
+node_modules/
+bun.lockb
+package-lock.json
+yarn.lock
