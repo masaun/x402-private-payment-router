@@ -54,7 +54,7 @@ describe("PrivateVault Contract", () => {
   async function authorizeDeposit(
     from: AztecAddress,
     amount: bigint,
-  ): Promise<void> {
+  ): Promise<AuthWitness> {
     // Create the transfer call that will happen inside the deposit function
     // The vault will call: token.methods.transfer_private_to_private(from, PRIVATE_VAULT, amount, 0)
     const action = token.methods.transfer_private_to_private(
@@ -65,8 +65,8 @@ describe("PrivateVault Contract", () => {
     );
 
     // Create authwit - the 'from' address authorizes the vault to make this call
-    const witness = await wallet.createAuthWit({ caller: privateVault.address, action }, from);
-    await wallet.addAuthWitness(witness);
+    // @ts-ignore - ContractFunctionInteractionCallIntent is supported but not in type signature
+    return await wallet.createAuthWit(from, { caller: privateVault.address, action });
   }
 
   /**
@@ -87,8 +87,8 @@ describe("PrivateVault Contract", () => {
     );
 
     // Create authwit - the vault address authorizes itself to make this call
-    const authwitInteraction = await wallet.setPublicAuthWit({ caller: token.address, action }, true);
-    await authwitInteraction.send().wait();
+    // @ts-ignore - ContractFunctionInteractionCallIntent is supported but not in type signature
+    await (await wallet.setPublicAuthWit({ caller: token.address, action }, true, privateVault.address)).send().wait();
   }
 
   beforeEach(async () => {
@@ -139,12 +139,12 @@ describe("PrivateVault Contract", () => {
     it("should allow user to deposit tokens into vault", async () => {
       const depositAmount = 100n;
 
-      // Authorize the vault to transfer tokens
-      await authorizeDeposit(alice, depositAmount);
+      // Create authwit allowing the vault to transfer tokens
+      const authwit = await authorizeDeposit(alice, depositAmount);
 
       await privateVault.methods
         .deposit(token.address, alice, depositAmount)
-        .send({ from: alice })
+        .send({ from: alice, authWitnesses: [authwit] })
         .wait();
 
       // Deposit should complete without error
@@ -154,16 +154,16 @@ describe("PrivateVault Contract", () => {
       const firstDeposit = 100n;
       const secondDeposit = 200n;
 
-      await authorizeDeposit(alice, firstDeposit);
+      const authwit1 = await authorizeDeposit(alice, firstDeposit);
       await privateVault.methods
         .deposit(token.address, alice, firstDeposit)
-        .send({ from: alice })
+        .send({ from: alice, authWitnesses: [authwit1] })
         .wait();
 
-      await authorizeDeposit(alice, secondDeposit);
+      const authwit2 = await authorizeDeposit(alice, secondDeposit);
       await privateVault.methods
         .deposit(token.address, alice, secondDeposit)
-        .send({ from: alice })
+        .send({ from: alice, authWitnesses: [authwit2] })
         .wait();
 
       // Both deposits should complete successfully
